@@ -1,0 +1,812 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body><title>Taller de Crayón</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Patrick+Hand&display=swap">
+<style>
+/* Layout: una sola columna tipo cuaderno; tarjetas con borde de crayón tembloroso; cada paso abre con un dibujo animado */
+:root{
+  --paper:#fbf7ec; --line:#2b2a33; --ink:#2b2a33; --soft:#6b6672;
+  --red:#e2483d; --blue:#2f7fd6; --yellow:#f5c43a; --green:#3fae5b; --pink:#ef7fb0; --orange:#f08a2c; --purple:#9b6bd6;
+  --card:#ffffff; --tape:rgba(200,225,255,.6);
+  --display:"Gochi Hand","Comic Sans MS","Chalkboard SE",cursive;
+  --body:"Patrick Hand","Comic Sans MS","Chalkboard SE",cursive;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#1f2430; --line:#f3eee2; --ink:#f3eee2; --soft:#b9b3a6; --card:#2a3040; --tape:rgba(200,225,255,.45);
+  --red:#ff6a5e; --blue:#5aa6ff; --yellow:#ffd65c; --green:#62d07d; --pink:#ff9cc6; --orange:#ffa552; --purple:#c39bff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#1f2430; --line:#f3eee2; --ink:#f3eee2; --soft:#b9b3a6; --card:#2a3040; --tape:rgba(200,225,255,.45);
+  --red:#ff6a5e; --blue:#5aa6ff; --yellow:#ffd65c; --green:#62d07d; --pink:#ff9cc6; --orange:#ffa552; --purple:#c39bff; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:19px;line-height:1.45;
+  background-image:repeating-linear-gradient(transparent 0 35px, color-mix(in srgb,var(--blue) 14%,transparent) 35px 36px);}
+.wrap{max-width:760px;margin:0 auto;padding-block:20px 60px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));}
+h1,h2,h3{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0;line-height:1.1}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:3px dashed var(--blue);outline-offset:4px}
+
+.cray{position:relative;isolation:isolate}
+.cray::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--fill,var(--card));
+  border:3px solid var(--line);border-radius:255px 18px 225px 18px/18px 225px 18px 255px;filter:url(#rough)}
+.cray.alt::before{border-radius:18px 225px 18px 255px/255px 18px 225px 18px}
+
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.logo{font-family:var(--display);font-size:clamp(34px,8vw,52px);transform:rotate(-2deg)}
+.logo span:nth-child(1){color:var(--red)}.logo span:nth-child(2){color:var(--blue)}.logo span:nth-child(3){color:var(--green)}
+.back{padding:6px 16px;font-family:var(--display);font-size:20px}
+
+.intro{font-size:22px;margin:0 0 22px;max-width:30ch}
+.intro mark{background:none;position:relative;z-index:0;color:inherit}
+.intro mark::after{content:"";position:absolute;left:-4px;right:-4px;bottom:2px;height:12px;background:var(--yellow);z-index:-1;border-radius:4px;filter:url(#rough);opacity:.8}
+
+.cats{display:grid;gap:22px}
+.cat{display:grid;grid-template-columns:110px 1fr;gap:16px;align-items:center;padding:18px 20px;text-align:left;transition:transform .15s}
+.cat:hover{transform:rotate(-1deg) scale(1.01)}
+.cat h2{font-size:34px}
+.cat p{margin:2px 0 0;color:var(--soft)}
+.count{display:inline-block;margin-top:6px;font-family:var(--display);font-size:17px;padding:0 10px}
+.cat svg{width:110px;height:90px;filter:url(#rough)}
+.peek{display:flex;gap:4px;margin-top:8px}
+.peek svg{width:38px;height:38px}
+
+.cathead{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.cathead svg{width:80px;height:66px;filter:url(#rough);flex:none}
+.cathead h2{font-size:42px}
+.sub{color:var(--soft);margin:0 0 20px}
+.projects{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.proj{padding:16px 18px 18px;text-align:left;display:flex;flex-direction:column;gap:6px;transition:transform .15s}
+.proj:hover{transform:translateY(-3px) rotate(-.6deg)}
+.proj .thumb{height:96px;display:flex;justify-content:center}
+.proj .thumb svg{height:96px;width:auto;filter:url(#rough2)}
+.proj h3{font-size:26px}
+.proj p{margin:0;color:var(--soft);font-size:17px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;font-size:16px}
+.chip{padding:0 10px;border:2px solid var(--line);border-radius:20px 8px 18px 10px}
+.badge{font-family:var(--display);font-size:18px}
+
+.dhead{display:flex;gap:14px;align-items:center}
+.dhead .thumb svg{width:84px;height:84px;filter:url(#rough2)}
+.dhead h2{font-size:clamp(34px,8vw,48px);margin:4px 0}
+.dhead p{color:var(--soft);margin:0}
+.box{padding:18px 20px;margin-bottom:22px}
+.box h3{font-size:26px;margin-bottom:8px}
+.mats{list-style:none;padding:0;margin:0;display:grid;gap:4px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.mats label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.tick{appearance:none;flex:none;width:24px;height:24px;margin-top:3px;border:2.5px solid var(--line);border-radius:6px 9px 5px 8px;cursor:pointer;background:var(--card)}
+.tick:checked{background:var(--green)}
+.tick:checked + span{text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:2px;color:var(--soft)}
+
+.progress{height:22px;margin:16px 0 18px}
+.progress .bar{position:absolute;left:6px;top:5px;bottom:5px;border-radius:10px;background:repeating-linear-gradient(-45deg,var(--orange) 0 6px,var(--yellow) 6px 12px);filter:url(#rough);transition:width .35s}
+
+.step{padding:16px 22px 22px;display:grid;gap:10px}
+.ill-wrap{border-bottom:3px dashed color-mix(in srgb,var(--line) 30%,transparent);padding-bottom:8px;margin:0 -6px}
+svg.ill{display:block;width:100%;max-height:260px;filter:url(#rough2)}
+svg.ill text{font-family:var(--display);fill:var(--ink)}
+.stepnum{font-family:var(--display);font-size:22px;color:var(--soft)}
+.stepnum b{font-weight:400;font-size:52px;line-height:.8;color:var(--accent,var(--red));margin-right:6px}
+.step h3{font-size:32px}
+.step p{margin:0;max-width:60ch}
+.tip{padding:10px 14px;font-size:17px;--fill:color-mix(in srgb,var(--yellow) 30%,var(--card))}
+.tip b{font-family:var(--display);font-weight:400}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px}
+.btn{padding:10px 22px;font-family:var(--display);font-size:22px}
+.btn.go{--fill:var(--accent,var(--red));color:#fff}
+.btn:disabled{opacity:.35;cursor:default}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dot{width:14px;height:14px;border:2px solid var(--line);border-radius:50%}
+.dot.on{background:var(--accent,var(--red))}
+.dot.cur{transform:scale(1.35)}
+.finish{text-align:center;padding:24px 20px}
+.finish h3{font-size:40px;color:var(--green)}
+footer{margin-top:40px;color:var(--soft);font-size:16px;text-align:center}
+
+/* héroe 3D */
+.hero{padding:14px 16px 12px;margin-bottom:16px;display:grid;gap:4px}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.hero h2{font-size:clamp(32px,7vw,44px)}
+.hero p{margin:0;color:var(--soft)}
+.btn.small{font-size:19px;padding:6px 16px;--fill:var(--yellow);color:#2b2a33}
+.v3d{height:220px;perspective:700px;display:grid;place-items:center;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.v3d:active{cursor:grabbing}
+.spin,.squishwrap{transform-style:preserve-3d}
+.obj{position:relative;width:180px;height:180px;transform-style:preserve-3d}
+.obj .lyr{position:absolute;inset:0}
+.obj .lyr svg{width:100%;height:100%;display:block}
+.squish{animation:squish .55s ease-out}
+@keyframes squish{25%{scale:1.2 .75}55%{scale:.9 1.1}80%{scale:1.04 .97}100%{scale:1 1}}
+.hint{font-size:15px;color:var(--soft);text-align:center}
+.vcube{position:relative;width:112px;height:112px;transform-style:preserve-3d}
+.vcube .fc{position:absolute;inset:0;border-radius:10px;overflow:hidden;box-shadow:inset 0 0 0 3px #2b2a33}
+.vcube .fc svg{width:100%;height:100%;display:block}
+/* cubo que se arma en 3D */
+.ill3d{position:relative;width:100%;aspect-ratio:240/150;max-height:260px;perspective:620px;display:grid;place-items:center;overflow:hidden}
+.c3stage{width:56px;height:56px;margin-top:50px;transform-style:preserve-3d;transform:rotateX(58deg) rotateZ(-32deg)}
+.net{position:relative;width:56px;height:56px;transform-style:preserve-3d}
+.cf{position:absolute;left:0;top:0;width:56px;height:56px;background:#f5c43a;box-shadow:inset 0 0 0 2.5px #2b2a33;transform-style:preserve-3d}
+.cf svg{width:100%;height:100%;display:block}
+.cf.base{background:#e9b52f}
+.wn{top:-56px;transform-origin:50% 100%;--r:rotateX(-90deg)}
+.ws{top:56px;transform-origin:50% 0;--r:rotateX(90deg)}
+.we{left:56px;transform-origin:0 50%;--r:rotateY(-90deg)}
+.ww{left:-56px;transform-origin:100% 50%;--r:rotateY(90deg)}
+.lid{top:-56px;transform-origin:50% 100%;--r:rotateX(-90deg)}
+.wn,.ws,.we,.ww,.lid{transform:var(--r)}
+.c-fill .lid{transform:rotateX(-25deg)}
+.c-fold .wn,.c-fold .ws,.c-fold .we,.c-fold .ww{animation:cfold 6s infinite ease-in-out}
+.c-fold .lid{animation:clid 6s infinite ease-in-out}
+.c-close .lid{animation:cclose 4s infinite ease-in-out}
+.c-close .net{animation:csq 4s infinite}
+@keyframes cfold{0%,15%{transform:none}45%,92%{transform:var(--r)}100%{transform:none}}
+@keyframes clid{0%,45%{transform:none}62%,92%{transform:var(--r)}100%{transform:none}}
+@keyframes cclose{0%,10%{transform:rotateX(-25deg)}40%,92%{transform:rotateX(-90deg)}100%{transform:rotateX(-25deg)}}
+@keyframes csq{0%,50%{scale:1 1 1}60%{scale:1.15 1.15 .65}72%{scale:.95 .95 1.08}82%,100%{scale:1 1 1}}
+.tp{position:absolute;background:rgba(200,225,255,.8);box-shadow:inset 0 0 0 1px #2b2a33;opacity:0;animation:ctape 6s infinite}
+.c-fill .tp,.c-close .tp{opacity:1;animation:none}
+@keyframes ctape{0%,64%{opacity:0}68%,92%{opacity:1}100%{opacity:0}}
+.c3lbl{position:absolute;right:6%;top:8%;font-family:var(--display);font-size:clamp(14px,3.4vw,18px);color:var(--ink)}
+.c3lbl.sq{color:var(--red);font-size:24px;opacity:0;animation:csql 4s infinite}
+@keyframes csql{0%,55%{opacity:0}60%,75%{opacity:1}85%,100%{opacity:0}}
+.bit{position:absolute;left:50%;top:6%;width:12px;height:10px;border-radius:50% 40% 55% 45%;background:#fff;box-shadow:inset 0 0 0 1.5px #2b2a33;animation:bit 2s infinite}
+@keyframes bit{0%{transform:translate(-30px,-10px);opacity:0}15%{opacity:1}70%{transform:translate(-6px,48px);opacity:1}80%,100%{transform:translate(-6px,52px);opacity:0}}
+/* calcar con cámara */
+.cam{position:fixed;inset:0;z-index:50;background:#111;overflow:hidden;touch-action:none}
+.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cam-paper{position:absolute;inset:0;background:#f6f2e6;background-image:repeating-linear-gradient(transparent 0 35px,rgba(47,127,214,.15) 35px 36px)}
+.cam-stage{position:absolute;left:0;right:0;top:calc(56px + env(safe-area-inset-top,0px));bottom:calc(250px + env(safe-area-inset-bottom,0px));display:grid;place-items:center}
+.cam.locked .cam-stage{top:0;bottom:0}
+.cam-tpl{height:100%;max-width:90vw;aspect-ratio:110/162;transform-origin:center}
+.cam-tpl svg{width:100%;height:auto;display:block}
+.cam-tpl .g{display:none;transition:opacity .3s}
+.cam-tpl .g.vis{display:inline;opacity:.35}
+.cam-tpl .g.cur{display:inline;opacity:1;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.55}}
+.cam-top{position:absolute;left:0;right:0;top:0;display:flex;gap:10px;align-items:center;
+  padding-top:calc(10px + env(safe-area-inset-top,0px));padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+.cam-title{font-family:var(--display);font-size:20px;color:#fff;background:rgba(0,0,0,.55);padding:2px 12px;border-radius:14px}
+.cam-setup,.cam-panel{position:absolute;left:50%;transform:translateX(-50%);width:min(520px,calc(100% - 24px));color:var(--ink)}
+.cam-setup{top:50%;transform:translate(-50%,-50%);padding:18px 18px 20px;display:grid;gap:8px;max-height:calc(100% - 90px);overflow:auto}
+.cam-setup h3{font-size:30px}
+.setup-ill{width:100%;max-height:200px;filter:url(#rough2)}
+.setup-ill text{font-family:var(--display);fill:var(--ink)}
+.cam-setup ol{margin:0;padding-left:22px;display:grid;gap:4px;font-size:18px}
+.cam-panel{bottom:calc(10px + env(safe-area-inset-bottom,0px));padding:12px 14px 12px;display:grid;gap:8px}
+.cam-note{margin:0;font-size:15px;padding:8px 10px;border:2px dashed var(--red);border-radius:12px;color:var(--ink)}
+.lesson{display:flex;gap:10px;align-items:center}
+.ldot{flex:none;width:34px;height:34px;border-radius:50%;border:3px solid var(--line)}
+.ltext{display:grid;flex:1;min-width:0;line-height:1.25}
+.ltext small{color:var(--soft);font-size:14px}
+.ltext b{font-family:var(--display);font-weight:400;font-size:24px}
+.ltext span{font-size:16px}
+.lcount{font-family:var(--display);font-size:18px;color:var(--soft);align-self:flex-start}
+.lnav{display:grid;grid-template-columns:1fr 2fr;gap:10px}
+.lnav .btn{padding:6px 12px;font-size:20px}
+.ltools{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:15px}
+.ltools label{display:flex;gap:6px;align-items:center}
+.ltools input{width:90px;accent-color:var(--red)}
+.ltools .chip{font-size:15px;background:var(--card)}
+.ltools .chip.on{background:var(--yellow);color:#2b2a33}
+.cam.locked .cam-top,.cam.locked .cam-panel{display:none}
+.cam-unlock{position:absolute;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+.btn.cam-cta{width:100%;margin-bottom:16px;font-size:24px}
+@media (prefers-reduced-motion:reduce){.ill3d *,.squish{animation:none!important}}
+@media (max-width:480px){.cat{grid-template-columns:76px 1fr;padding:14px}.cat svg{width:76px;height:64px}.cat h2{font-size:28px}.step{padding:12px 14px 18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/></filter>
+  <filter id="rough2"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="5" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/></filter>
+  <path id="measure-path" d=""/>
+</svg>
+
+<div class="wrap">
+  <header class="top">
+    <div class="logo" aria-label="Taller de Crayón"><span>Ta</span><span>ll</span><span>er</span> de crayón</div>
+    <button class="back cray alt" id="back" hidden>← Volver</button>
+  </header>
+  <main id="app"></main>
+  <footer>Pide ayuda a un adulto cuando uses tijeras, cúter o silicón caliente.</footer>
+</div>
+
+
+<div class="cam" id="cam" hidden>
+  <video id="cam-video" playsinline muted autoplay></video>
+  <div class="cam-paper" id="cam-paper"></div>
+  <div class="cam-stage" id="cam-stage"><div class="cam-tpl" id="cam-tpl"></div></div>
+  <div class="cam-top" id="cam-top"><button class="btn cray small" id="cam-close">✕ Cerrar</button><span class="cam-title" id="cam-title"></span></div>
+  <div class="cam-setup cray" id="cam-setup">
+    <h3>Prepara tu cel</h3>
+    <svg class="setup-ill" viewBox="0 0 240 150" role="img" aria-label="El cel sobre un vaso, con la hoja abajo">
+      <path d="M10 138 H230" stroke="var(--line)" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M40 132 L200 132 L222 146 L18 146Z" fill="var(--card)" stroke="var(--line)" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M100 138 q8 -14 20 -6 q10 -12 18 4" fill="none" stroke="var(--green)" stroke-width="2"/>
+      <path d="M150 52 L150 132 M178 52 L178 132" stroke="var(--line)" stroke-width="2.2"/><path d="M150 52 H178" stroke="var(--line)" stroke-width="2.2"/>
+      <rect x="150" y="52" width="28" height="80" fill="color-mix(in srgb,var(--blue) 18%,transparent)"/>
+      <rect x="92" y="38" width="96" height="14" rx="4" fill="var(--blue)" stroke="var(--line)" stroke-width="2.5"/>
+      <circle cx="112" cy="52" r="3" fill="var(--line)"/>
+      <path d="M112 55 L84 130 M112 55 L148 130" stroke="var(--red)" stroke-width="1.8" stroke-dasharray="4 4"/>
+      <text x="96" y="30" font-size="13">cel, pantalla arriba</text>
+      <text x="186" y="96" font-size="13">vaso</text>
+      <text x="22" y="124" font-size="13">hoja</text>
+      <path d="M26 40 V100 M20 46 l6 -6 6 6 M20 94 l6 6 6 -6" fill="none" stroke="var(--line)" stroke-width="2" stroke-linecap="round"/><text x="34" y="74" font-size="12">más alto =</text><text x="34" y="87" font-size="12">más grande</text>
+    </svg>
+    <ol>
+      <li>Pon el cel sobre un vaso, con la pantalla hacia arriba.</li>
+      <li>Pon la hoja abajo de la cámara y sujétala con cinta para que no se mueva.</li>
+      <li>Mira la pantalla y dibuja en la hoja siguiendo el dibujo transparente.</li>
+    </ol>
+    <button class="btn cray go alt" id="cam-start">¡Listo, abrir cámara!</button>
+  </div>
+  <div class="cam-panel cray" id="cam-panel" hidden>
+    <p class="cam-note" id="cam-note" hidden>No se pudo abrir la cámara. Dentro de Claude la cámara está bloqueada: abre la app desde su enlace en el navegador del cel (Chrome o Safari). Mientras, aquí ves cómo funciona.</p>
+    <div class="lesson"><span class="ldot" id="l-dot"></span><div class="ltext"><small id="l-kind"></small><b id="l-name"></b><span id="l-text"></span></div><span class="lcount" id="l-count"></span></div>
+    <div class="lnav"><button class="btn cray" id="l-prev">Atrás</button><button class="btn cray go alt" id="l-next">Siguiente</button></div>
+    <div class="ltools">
+      <label>Transparencia <input type="range" id="cam-op" min="15" max="100" value="60"></label>
+      <label>Tamaño <input type="range" id="cam-size" min="50" max="160" value="100"></label>
+      <button class="chip" id="cam-torch" hidden>Linterna</button>
+      <button class="chip" id="cam-lock">Bloquear</button>
+    </div>
+  </div>
+  <button class="btn cray small cam-unlock" id="cam-unlock" hidden>Desbloquear</button>
+</div>
+<script>
+/* ---------- helpers de dibujo ---------- */
+const LN="var(--line)", DK="#2b2a33";
+const S=`stroke="${LN}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"`;
+const SD=`stroke="${DK}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"`;
+let U=0; const uid=()=>"k"+(++U);
+const A=(at,v,d,kt)=>`<animate attributeName="${at}" values="${v}" dur="${d}s" repeatCount="indefinite"${kt?` keyTimes="${kt}"`:""}/>`;
+const AT=(type,v,d,kt)=>`<animateTransform attributeName="transform" type="${type}" values="${v}" dur="${d}s" repeatCount="indefinite" additive="sum"${kt?` keyTimes="${kt}"`:""}/>`;
+const drawOn=(d,dur,extra="",kt="0;.65;1")=>`<path d="${d}" pathLength="1" stroke-dasharray="1" fill="none" ${extra}>${A("stroke-dashoffset","1;0;0",dur,kt)}</path>`;
+const fadeIn=(t,d,end=.95)=>A("opacity",`0;0;1;1;0`,d,`0;${t};${Math.min(t+.04,end-.01).toFixed(3)};${end};1`);
+const sheet=(x,y,w,h)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="var(--card)" ${S}/>`;
+const scene=(inner,rest)=>`<svg class="ill" viewBox="0 0 240 150" data-rest="${rest||0}" role="img" aria-label="Dibujo del paso">${inner}</svg>`;
+const scissors=(c="var(--red)")=>`<g><circle cx="-9" cy="-5" r="4.5" fill="none" stroke="${c}" stroke-width="2.6"/><circle cx="-9" cy="5" r="4.5" fill="none" stroke="${c}" stroke-width="2.6"/><path d="M-5 -3 L11 3 M-5 3 L11 -3" ${S}/></g>`;
+const pencil=(c="var(--yellow)")=>`<g transform="rotate(-40)"><rect x="3" y="-3.5" width="34" height="7" fill="${c}" ${S}/><path d="M3 -3.5 L-6 0 L3 3.5Z" fill="#f2d3a8" ${S}/></g>`;
+const brush=(c)=>`<g transform="rotate(-35)"><rect x="10" y="-2.5" width="32" height="5" rx="2" fill="#c98b4a" ${S}/><path d="M10 -5 L-4 -3 Q-8 0 -4 3 L10 5Z" fill="${c}" ${S}/></g>`;
+const tube=(x,y,w,h,c)=>`<path d="M${x} ${y} L${x} ${y+h} A${w/2} 5 0 0 0 ${x+w} ${y+h} L${x+w} ${y}" fill="${c}" ${S}/><ellipse cx="${x+w/2}" cy="${y}" rx="${w/2}" ry="5" fill="#d9a066" ${S}/>`;
+const reveal=(x,y,w,h,dur,body,dir="x")=>{const id=uid();
+  const r=dir==="x"?`<rect x="${x}" y="${y}" width="0" height="${h}">${A("width",`0;${w};${w}`,dur,"0;.7;1")}</rect>`
+                  :`<rect x="${x}" y="${y+h}" width="${w}" height="0">${A("height",`0;${h};${h}`,dur,"0;.7;1")}${A("y",`${y+h};${y};${y}`,dur,"0;.7;1")}</rect>`;
+  return `<clipPath id="${id}">${r}</clipPath><g clip-path="url(#${id})">${body}</g>`};
+
+/* ---------- animalitos (caja de 100x100) ---------- */
+const ANIMALS={
+ rana:{name:"Rana",art:"la",color:"#62c46f",colorName:"verde",back:"sus patitas traseras",
+  path:"M18 62 C18 44 26 36 33 32 C29 18 47 15 46 28 C48 27 52 27 54 28 C53 15 71 18 67 32 C74 36 82 44 82 62 C82 80 66 86 50 86 C34 86 18 80 18 62Z",
+  det:`<ellipse cx="50" cy="68" rx="20" ry="12" fill="#d6f5c4"/><circle cx="40" cy="27" r="7" fill="#fff" ${SD}/><circle cx="60" cy="27" r="7" fill="#fff" ${SD}/><circle cx="41" cy="28" r="3" fill="${DK}"/><circle cx="59" cy="28" r="3" fill="${DK}"/><path d="M38 47 q12 9 24 0" fill="none" ${SD}/><ellipse cx="30" cy="48" rx="5" ry="3" fill="#f7a8c4"/><ellipse cx="70" cy="48" rx="5" ry="3" fill="#f7a8c4"/>`},
+ vaquita:{name:"Vaquita",art:"la",color:"#ffffff",colorName:"blanco y manchas negras",back:"una colita con mechón",
+  path:"M27 38 C17 37 11 31 13 26 C19 25 25 28 29 31 C33 24 41 21 50 21 C59 21 67 24 71 31 C75 28 81 25 87 26 C89 31 83 37 73 38 C74 46 74 54 74 62 C74 79 64 86 50 86 C36 86 26 79 26 62 C26 54 26 46 27 38Z",
+  det:`<path d="M31 40 q8 -6 13 2 q-1 9 -11 8 q-6 -4 -2 -10z" fill="${DK}"/><path d="M60 29 q10 -2 10 8 q-6 6 -12 0z" fill="${DK}"/><ellipse cx="20" cy="30" rx="5" ry="2.5" fill="#f7a8c4" transform="rotate(20 20 30)"/><ellipse cx="80" cy="30" rx="5" ry="2.5" fill="#f7a8c4" transform="rotate(-20 80 30)"/><circle cx="40" cy="52" r="3.5" fill="${DK}"/><circle cx="60" cy="52" r="3.5" fill="${DK}"/><ellipse cx="50" cy="71" rx="17" ry="11" fill="#f7a8c4" ${SD}/><circle cx="44" cy="71" r="2.5" fill="${DK}"/><circle cx="56" cy="71" r="2.5" fill="${DK}"/>`},
+ pez:{name:"Pez",art:"el",color:"#f08a2c",colorName:"naranja",back:"escamas en forma de U",
+  path:"M12 50 C22 30 52 24 70 40 C76 34 82 28 88 26 C85 40 85 60 88 74 C82 72 76 66 70 60 C52 76 22 70 12 50Z",
+  det:`<path d="M46 34 q6 16 0 32 M58 37 q5 13 0 26" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="30" cy="46" r="6" fill="#fff" ${SD}/><circle cx="31" cy="46" r="3" fill="${DK}"/><path d="M15 54 q4 3 8 0" fill="none" ${SD}/><path d="M40 64 q6 10 16 6" fill="#ffc25a" ${SD}/>`},
+ gatito:{name:"Gatito",art:"el",color:"#a9a6bd",colorName:"gris",back:"una colita rayada",
+  path:"M25 45 L22 18 L40 31 C46 29 54 29 60 31 L78 18 L75 45 C82 54 81 70 73 78 C65 86 35 86 27 78 C19 70 18 54 25 45Z",
+  det:`<path d="M26 25 L28 38 L36 32Z M74 25 L72 38 L64 32Z" fill="#f7a8c4"/><ellipse cx="40" cy="53" rx="3.2" ry="4.2" fill="${DK}"/><ellipse cx="60" cy="53" rx="3.2" ry="4.2" fill="${DK}"/><path d="M47 61 h6 l-3 3.5z" fill="#f77fa0"/><path d="M50 64 q-4 5 -8 2 M50 64 q4 5 8 2" fill="none" ${SD}/><path d="M18 58 h14 M18 65 l14 -2 M82 58 h-14 M82 65 l-14 -2" fill="none" stroke="${DK}" stroke-width="1.6" stroke-linecap="round"/><path d="M44 36 l2 6 M50 34 v7 M56 36 l-2 6" fill="none" stroke="#7d7a92" stroke-width="2.4" stroke-linecap="round"/>`},
+ pulpo:{name:"Pulpo",art:"el",color:"#b07ad9",colorName:"morado",back:"ventosas en los tentáculos",
+  path:"M24 54 C22 30 34 16 50 16 C66 16 78 30 76 54 C80 62 86 66 84 74 C78 72 74 68 72 66 C72 76 70 82 64 84 C62 78 62 72 60 70 C58 78 54 84 50 84 C46 84 42 78 40 70 C38 72 38 78 36 84 C30 82 28 76 28 66 C26 68 22 72 16 74 C14 66 20 62 24 54Z",
+  det:`<circle cx="41" cy="42" r="6.5" fill="#fff" ${SD}/><circle cx="59" cy="42" r="6.5" fill="#fff" ${SD}/><circle cx="42" cy="43" r="3" fill="${DK}"/><circle cx="58" cy="43" r="3" fill="${DK}"/><path d="M44 54 q6 6 12 0" fill="none" ${SD}/><ellipse cx="33" cy="52" rx="4.5" ry="2.6" fill="#f7a8c4"/><ellipse cx="67" cy="52" rx="4.5" ry="2.6" fill="#f7a8c4"/><circle cx="46" cy="26" r="2.6" fill="#d7b3f2"/><circle cx="57" cy="23" r="2" fill="#d7b3f2"/><circle cx="62" cy="30" r="1.8" fill="#d7b3f2"/>`}
+};
+const animalArt=(a,o={})=>`<path d="${a.path}" fill="${o.fill===false?"var(--card)":(o.color||a.color)}" ${S}/>${o.details===false?"":a.det}`;
+
+/* puntos sobre la silueta para las tiras de cinta */
+const mp=document.getElementById("measure-path");
+function edgeInfo(a){
+  if(a._edge)return a._edge;
+  mp.setAttribute("d",a.path);const L=mp.getTotalLength();
+  let best=0,by=-1;for(let i=0;i<200;i++){const p=mp.getPointAtLength(L*i/200);if(p.x>32&&p.x<68&&p.y>by){by=p.y;best=i/200}}
+  const tapes=[];const N=13;
+  for(let i=0;i<N;i++){let f=(best+0.5/N+i/N)%1; if(Math.abs(((f-best+1.5)%1)-.5)<.05)continue;
+    const p=mp.getPointAtLength(L*f),q=mp.getPointAtLength(L*((f+.004)%1));
+    tapes.push({x:p.x,y:p.y,a:Math.atan2(q.y-p.y,q.x-p.x)*180/Math.PI});}
+  const g=mp.getPointAtLength(L*best),g2=mp.getPointAtLength(L*((best+.004)%1));
+  return a._edge={tapes,gap:{x:g.x,y:g.y,a:Math.atan2(g2.y-g.y,g2.x-g.x)*180/Math.PI}};
+}
+const tapePiece=(t,inner="")=>`<g transform="translate(${t.x.toFixed(1)} ${t.y.toFixed(1)}) rotate(${t.a.toFixed(1)})"><rect x="-6" y="-4" width="12" height="8" rx="1" fill="var(--tape)" stroke="${LN}" stroke-width="1">${inner}</rect></g>`;
+
+/* ---------- escenas del squishy de animalito ---------- */
+const AS={
+ draw:a=>scene(`${sheet(50,6,140,138)}<g transform="translate(62 20) scale(1.15)">
+   <path d="${a.path}" fill="var(--card)" stroke="none"/>
+   ${drawOn(a.path,4,S)}
+   <g opacity="0">${A("opacity","0;0;1;1",4,"0;.6;.65;1")}${a.det.replace(/fill="#(?!fff)[0-9a-fA-F]{3,6}"/g,'fill="none"').replace(/fill="#fff"/g,'fill="none"').replace(/stroke="#2b2a33"/g,`stroke="${LN}"`)}</g>
+   <g><animateMotion dur="4s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;.65;1" calcMode="linear" path="${a.path}"/>${pencil()}</g></g>`,3.9),
+ trace:a=>scene(`${sheet(8,14,108,124)}${sheet(124,14,108,124)}
+   <g transform="translate(14 28) scale(.96)">${animalArt(a,{fill:false,details:false})}</g>
+   <g transform="translate(226 28) scale(-.96 .96)"><path d="${a.path}" fill="none" stroke="${LN}" stroke-width="1.5" stroke-dasharray="3 4" opacity=".45"/>${drawOn(a.path,4,S)}
+     <g><animateMotion dur="4s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;.65;1" calcMode="linear" path="${a.path}"/><g transform="scale(-1 1)">${pencil("var(--blue)")}</g></g></g>
+   <text x="62" y="148" text-anchor="middle" font-size="13">frente</text><text x="178" y="148" text-anchor="middle" font-size="13">atrás (al revés)</text>`,3.9),
+ color:a=>scene(`${sheet(8,14,108,124)}${sheet(124,14,108,124)}
+   <g transform="translate(14 28) scale(.96)">${reveal(0,0,100,100,4,animalArt(a))}<path d="${a.path}" fill="none" ${S}/></g>
+   <g transform="translate(226 28) scale(-.96 .96)">${reveal(0,0,100,100,4,`<path d="${a.path}" fill="${a.color}"/>`)}<path d="${a.path}" fill="none" ${S}/></g>
+   <g transform="translate(14 120)">${AT("translate","0 -40;100 -40;100 -40",4,"0;.7;1")}${pencil(a.color==="#ffffff"?DK:a.color)}</g>`,3.9),
+ tape:a=>{const strips=[0,1,2,3].map(i=>{const t=.1+i*.17;return `<rect x="-10" y="${-2+i*27}" width="124" height="30" fill="var(--tape)" stroke="${LN}" stroke-width="1.2">${A("x",`-180;-180;-10;-10`,5,`0;${t};${(t+.12).toFixed(2)};1`)}</rect>`}).join("");
+   return scene(`${sheet(60,10,120,130)}<g transform="translate(68 20) scale(1.04)">${animalArt(a)}${strips}</g>`,4.9)},
+ cut:a=>scene(`${sheet(40,6,160,138)}<g transform="translate(62 18) scale(1.15)">
+   <rect x="-12" y="-6" width="124" height="112" fill="var(--tape)" opacity=".5"/>${animalArt(a)}
+   <g transform="translate(50 50) scale(1.12) translate(-50 -50)"><path d="${a.path}" fill="none" stroke="var(--red)" stroke-width="1.6" stroke-dasharray="3 3"/>
+   <g><animateMotion dur="5s" repeatCount="indefinite" rotate="auto" path="${a.path}"/>${scissors()}</g></g></g>
+   <text x="200" y="20" font-size="12" text-anchor="end">corta por fuera</text>`,2),
+ glue:a=>{const e=edgeInfo(a);const n=e.tapes.length;
+   const tapes=e.tapes.map((t,i)=>tapePiece(t,A("opacity",`0;0;1;1;0`,7,`0;${(.36+i*.035).toFixed(3)};${(.38+i*.035).toFixed(3)};.95;1`))).join("");
+   const gx=70+e.gap.x, gy=26+e.gap.y;
+   return scene(`<g transform="translate(70 26)">
+     <g>${AT("translate","58 0;58 0;0 0;0 0",7,"0;.1;.3;1")}<g transform="translate(100 0) scale(-1 1)"><path d="${a.path}" fill="${a.color}" opacity=".55" ${S}/></g></g>
+     <g>${AT("translate","-58 0;-58 0;0 0;0 0",7,"0;.1;.3;1")}${animalArt(a)}</g>
+     ${tapes}</g>
+     <text x="70" y="144" text-anchor="middle" font-size="13">frente${A("opacity","1;1;0;0",7,"0;.15;.25;1")}</text>
+     <text x="186" y="144" text-anchor="middle" font-size="13">atrás${A("opacity","1;1;0;0",7,"0;.15;.25;1")}</text>
+     <g opacity="0">${A("opacity","0;0;1;1;0",7,"0;.18;.22;.34;.36")}<path d="M120 18 l0 -12 M114 12 l6 -6 6 6" fill="none" ${S} transform="rotate(180 120 12)"/><text x="134" y="16" font-size="13">¡júntalas!</text></g>
+     <g opacity="0">${A("opacity","0;0;1;1;0",7,"0;.8;.83;.95;1")}<path d="M${gx} ${gy+6} q4 10 18 12" fill="none" stroke="var(--red)" stroke-width="2.4" stroke-linecap="round"/><path d="M${gx-1} ${gy+4} l-2 7 M${gx-1} ${gy+4} l6 4" fill="none" stroke="var(--red)" stroke-width="2.4" stroke-linecap="round"/><text x="${gx+20}" y="${gy+22}" font-size="13">deja un hueco</text></g>`,6.4)},
+ fill:a=>{const e=edgeInfo(a),g=e.gap;
+   const bits=[0,1,2,3,4].map(i=>{const t=i*.18;return `<path d="M-4 0 q2 -5 5 -2 q4 -2 3 3 q-1 4 -5 2 q-4 1 -3 -3z" fill="#fff" ${S} stroke-width="1.4">${AT("translate",`${g.x+(i%2?14:-12)} ${g.y+44};${g.x+(i%2?14:-12)} ${g.y+44};${g.x} ${g.y-4};${g.x} ${g.y-4}`,4,`0;${t.toFixed(2)};${(t+.15).toFixed(2)};1`)}${A("opacity",`0;1;1;0;0`,4,`0;${(t+.01).toFixed(2)};${(t+.14).toFixed(2)};${(t+.16).toFixed(2)};1`)}</path>`}).join("");
+   return scene(`<g transform="translate(120 70)"><g>${AT("scale","1;1.06;1",4)}<g transform="translate(-50 -56)">${animalArt(a)}${e.tapes.map(t=>tapePiece(t)).join("")}${bits}</g></g></g>
+   <text x="200" y="40" font-size="13" text-anchor="middle">relleno</text>`,1)},
+ close:a=>{const e=edgeInfo(a);
+   return scene(`<g transform="translate(120 128)"><g>${AT("scale","1 1;1 1;1.14 .78;1 1;1 1",4,"0;.4;.55;.7;1")}<g transform="translate(-50 -100)">
+     ${animalArt(a)}${e.tapes.map(t=>tapePiece(t)).join("")}${tapePiece(e.gap,A("opacity","0;0;1;1",4,"0;.15;.2;1"))}</g></g></g>
+     <g opacity="0">${A("opacity","0;0;1;0;0",4,"0;.45;.55;.8;1")}<text x="190" y="40" font-size="20" fill="var(--red)" style="fill:var(--red)">¡squish!</text>
+     <path d="M40 40 l-10 -8 M36 56 l-14 0 M200 64 l14 4" ${S} fill="none"/></g>`,3.6)}
+};
+function animalProject(key){
+  const a=ANIMALS[key];const n=a.name.toLowerCase();
+  return {id:"sq-"+key,name:"Squishy de "+n,desc:`Un${a.art==="la"?"a":""} ${n} de papel gordit${a.art==="la"?"a":"o"} para apretar.`,time:"40 min",level:"Fácil",animal:key,trace:true,
+   mats:["2 hojas blancas","Lápiz y plumón negro",`Colores o crayones (${a.colorName})`,"Cinta ancha transparente","Tijeras","Bolsas de plástico o algodón para rellenar"],
+   steps:[
+    [`Dibuja ${a.art} ${n}`,`Dibuja ${a.art} ${n} grande en una hoja blanca, con formas redondas y sencillas. Mientras más gordit${a.art==="la"?"a":"o"}, mejor se aplasta.`,"Dibuja primero con lápiz y luego repasa la orilla con plumón negro.",AS.draw],
+    ["Calca la espalda",`Pon otra hoja encima y calca solo la silueta. Por detrás puedes dibujarle ${a.back}.`,"Pega las hojas en la ventana: la luz te ayuda a ver la línea.",AS.trace],
+    ["Colorea los dos lados",`Colorea el frente y la espalda. Usa ${a.colorName} para el cuerpo y pon los detalles con negro.`,"Colorea fuerte, así se ve bonito debajo de la cinta.",AS.color],
+    ["Forra con cinta","Cubre cada dibujo con cinta ancha transparente. Pon tiras una junto a otra, encimándolas un poquito, sin dejar huecos.","La cinta es lo que lo hace brillante y resistente, como un squishy de tienda.",AS.tape],
+    ["Recorta","Recorta cada pieza dejando un borde de medio centímetro alrededor de la línea negra.","Si cortas pegado a la línea, se puede abrir al rellenar.",AS.cut],
+    ["Pega los bordes","Junta el frente con la espalda, con los dibujos hacia afuera. Pega pedacitos de cinta por toda la orilla, doblándolos de un lado al otro. Deja un hueco abajo sin pegar.","Corta la cinta en pedacitos de 3 cm antes de empezar. Así es más fácil.",AS.glue],
+    ["Rellena",`Mete pedacitos de bolsa o algodón por el hueco. Empuja con un lápiz hasta las orillas para que quede parejo.`,"Hasta las orejas y la cola necesitan relleno.",AS.fill],
+    ["Cierra el hueco",`Cierra el hueco con un último pedacito de cinta. ¡Listo, ya puedes apretar a tu ${n}!`,"",AS.close]]};
+}
+
+/* ---------- escenas para los otros proyectos ---------- */
+const BR=[`var(--red)`,`var(--blue)`,`var(--yellow)`];
+const ringPts=(cx,cy,r,n)=>Array.from({length:n},(_,i)=>{const t=i/n*Math.PI*2-Math.PI/2;return [cx+r*Math.cos(t),cy+r*Math.sin(t)]});
+const donut=(c)=>`<path d="M120 30 a45 45 0 1 0 0.1 0z M120 60 a15 15 0 1 1 -0.1 0z" fill="${c}" fill-rule="evenodd" ${S}/>`;
+const robotBody=`<rect x="85" y="68" width="70" height="62" rx="3" fill="#c8ccd6" ${S}/>`, robotHead=`<rect x="98" y="28" width="44" height="38" rx="3" fill="#c8ccd6" ${S}/>`;
+const house=(c="#d9a066")=>`<rect x="60" y="62" width="120" height="74" fill="${c}" ${S}/>`;
+const roof=`<path d="M48 64 L120 18 L192 64Z" fill="var(--red)" ${S}/>`;
+const SC={
+ measure:()=>scene(`<rect x="20" y="92" width="200" height="26" rx="3" fill="var(--yellow)" ${S}/>${Array.from({length:21},(_,i)=>`<path d="M${20+i*10} 92 v${i%5?6:11}" ${S} stroke-width="1.5"/>`).join("")}
+   ${BR.map((c,i)=>`<line x1="20" y1="${60+i*9}" x2="20" y2="${60+i*9}" stroke="${c}" stroke-width="4" stroke-linecap="round">${A("x2","20;210;210",3,"0;.7;1")}</line>`).join("")}
+   <text x="190" y="140" font-size="16" opacity="0">60 cm${A("opacity","0;0;1;1",3,"0;.68;.72;1")}</text>`,2.9),
+ knot:()=>scene(`${BR.map((c,i)=>drawOn(`M${100+i*20} 140 C${100+i*20} 100 ${115+i*5} 80 120 60 L${110+i*10} 26`,3,`stroke="${c}" stroke-width="4" stroke-linecap="round"`)).join("")}
+   <circle cx="120" cy="60" r="9" fill="var(--red)" ${S}>${A("r","0;0;10;9",3,"0;.5;.6;1")}</circle>
+   <rect x="80" y="22" width="80" height="16" fill="var(--tape)" stroke="${LN}" stroke-width="1.2" transform="rotate(-4 120 30)"/><text x="170" y="34" font-size="13">cinta</text>`,2.9),
+ braid:()=>{const strand=k=>{let d="";for(let y=24;y<=140;y+=3){const x=120+16*Math.sin(y/14+k*2.094);d+=(d?"L":"M")+x.toFixed(1)+" "+y}return d};
+   return scene(`<rect x="96" y="8" width="48" height="14" fill="var(--tape)" stroke="${LN}" stroke-width="1.2"/>${[0,1,2].map(k=>drawOn(strand(k),4,`stroke="${BR[k]}" stroke-width="6" stroke-linecap="round"`)).join("")}
+   <text x="150" y="70" font-size="13">derecha al centro</text><text x="20" y="100" font-size="13">izquierda al centro</text>`,3.9)},
+ wrist:()=>scene(`<rect x="0" y="52" width="240" height="46" rx="20" fill="#f2c9a0" ${S}/>
+   ${BR.map((c,i)=>`<rect x="${108+i*8}" y="48" width="8" height="54" rx="3" fill="${c}" ${S} stroke-width="1.6"/>`).join("")}
+   <path d="M120 102 l-6 22 M124 102 l8 22" ${S} fill="none"/>
+   <g>${AT("translate","160 130;160 130;132 122;132 122",3,"0;.4;.6;1")}${scissors()}</g><text x="20" y="140" font-size="13">deja 3 cm</text>`,2.9),
+ fold:(c="var(--pink)")=>scene(`<rect x="40" y="30" width="80" height="90" fill="${c}" ${S}/>
+   <g transform="translate(120 0)"><g>${AT("scale","1 1;1 1;-1 1;-1 1",3,"0;.2;.6;1")}<rect x="0" y="30" width="80" height="90" fill="${c}" opacity=".75" ${S}/></g></g>
+   <line x1="120" y1="22" x2="120" y2="128" stroke="${LN}" stroke-width="1.5" stroke-dasharray="4 4"/>`,2.9),
+ cutTabs:()=>scene(`<rect x="50" y="30" width="140" height="92" fill="var(--pink)" ${S}/><path d="M50 122 L190 122" ${S} stroke-width="4"/>
+   <path d="M100 122 V82 M140 122 V82" stroke="var(--red)" stroke-width="2" stroke-dasharray="3 3"/>
+   <g><animateMotion dur="3s" repeatCount="indefinite" rotate="auto" path="M100 130 L100 80 M140 130 L140 80"/>${scissors()}</g>
+   <text x="196" y="125" font-size="12">doblez</text><text x="104" y="76" font-size="12">4 cm</text>`,1),
+ push:()=>scene(`<path d="M50 20 L50 128 L200 128" fill="none" ${S} stroke-width="4"/>
+   <path fill="var(--pink)" ${S}>${A("d","M50 78 L50 78 L50 128 L50 128 Z;M50 78 L50 78 L50 128 L50 128 Z;M50 78 L95 78 L95 128 L50 128 Z;M50 78 L95 78 L95 128 L50 128 Z",3,"0;.3;.6;1")}</path>
+   <path d="M150 70 l-30 0 M128 62 l-8 8 8 8" fill="none" ${S}/><text x="136" y="58" font-size="13">empuja</text>`,2.9),
+ drawCake:()=>{const d="M70 112 L70 82 L170 82 L170 112 Z M70 94 q12 8 25 0 q12 8 25 0 q12 8 25 0 q12 8 25 0 M120 82 L120 62";
+   return scene(`${sheet(40,14,160,124)}${drawOn(d,4,S)}<path d="M120 62 q-6 -8 0 -14 q6 6 0 14z" fill="var(--orange)" opacity="0">${A("opacity","0;0;1;1",4,"0;.64;.68;1")}</path>
+   <g><animateMotion dur="4s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;.65;1" calcMode="linear" path="${d}"/>${pencil("var(--red)")}</g>`,3.9)},
+ popup:()=>scene(`<path d="M40 20 L200 20 L200 80 L40 80Z" fill="var(--pink)" ${S}/><path d="M40 80 L200 80 L222 134 L18 134Z" fill="var(--pink)" opacity=".8" ${S}/>
+   <g transform="translate(120 80)"><g>${AT("scale","0;0;1.1;1;1",3,"0;.2;.4;.5;1")}<rect x="-30" y="-36" width="60" height="30" fill="var(--yellow)" ${S}/><path d="M-30 -24 q8 6 15 0 q8 6 15 0 q8 6 15 0 q8 6 15 0" fill="none" ${S}/><path d="M0 -36 v-12" ${S}/><path d="M0 -48 q-5 -7 0 -12 q5 5 0 12z" fill="var(--orange)"/></g></g>`,2.9),
+ cover:()=>scene(`<rect x="60" y="14" width="120" height="122" fill="var(--blue)" ${S}/>${[[90,40],[150,50],[100,110],[155,112]].map(([x,y],i)=>`<path d="M${x} ${y-8} l2.5 6 6.5 .5 -5 4 1.5 6.5 -5.5 -3.5 -5.5 3.5 1.5 -6.5 -5 -4 6.5 -.5z" fill="var(--yellow)" ${S} stroke-width="1.5" opacity="0">${A("opacity",`0;0;1;1`,3,`0;${.1+i*.15};${.15+i*.15};1`)}</path>`).join("")}
+   <text x="120" y="82" text-anchor="middle" font-size="22" style="fill:#fff">¡Feliz día!</text>`,2.9),
+ plateCut:()=>scene(`<circle cx="120" cy="75" r="62" fill="var(--card)" ${S}/><circle cx="120" cy="75" r="40" fill="none" stroke="var(--red)" stroke-width="2" stroke-dasharray="4 4"/>
+   <g><animateMotion dur="4s" repeatCount="indefinite" rotate="auto" path="M120 35 a40 40 0 1 1 -0.1 0z"/>${scissors()}</g>`,1),
+ paintRing:()=>scene(`${reveal(50,5,140,140,4,`<circle cx="120" cy="75" r="51" fill="none" stroke="var(--purple)" stroke-width="20"/>`)}<circle cx="120" cy="75" r="62" fill="none" ${S}/><circle cx="120" cy="75" r="40" fill="none" ${S}/>
+   <g>${AT("translate","50 30;190 30;190 30",4,"0;.7;1")}${brush("var(--purple)")}</g>`,3.9),
+ punch:()=>scene(`<circle cx="120" cy="75" r="51" fill="none" stroke="var(--purple)" stroke-width="20"/><circle cx="120" cy="75" r="62" fill="none" ${S}/><circle cx="120" cy="75" r="40" fill="none" ${S}/>
+   ${ringPts(120,75,51,11).map(([x,y],i)=>`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="var(--card)" ${S} stroke-width="1.5" opacity="0">${A("opacity",`0;0;1;1`,4,`0;${(i*.06).toFixed(2)};${(i*.06+.03).toFixed(2)};1`)}</circle>`).join("")}`,3.9),
+ weave:()=>{const p=ringPts(120,75,51,11);const ord=[0,5,10,4,9,3,8,2,7,1,6,0];const d="M"+ord.map(i=>p[i].map(v=>v.toFixed(1)).join(" ")).join(" L");
+   return scene(`<circle cx="120" cy="75" r="51" fill="none" stroke="var(--purple)" stroke-width="20"/><circle cx="120" cy="75" r="62" fill="none" ${S}/><circle cx="120" cy="75" r="40" fill="none" ${S}/>
+   ${p.map(([x,y])=>`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="var(--card)" ${S} stroke-width="1.5"/>`).join("")}${drawOn(d,5,`stroke="var(--orange)" stroke-width="2.5"`)}
+   ${[[110,62],[132,88],[118,96]].map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="4" fill="var(--blue)" ${S} stroke-width="1.4" opacity="0">${A("opacity",`0;0;1;1`,5,`0;${.2+i*.15};${.22+i*.15};1`)}</circle>`).join("")}`,4.9)},
+ hang:()=>scene(`<circle cx="120" cy="60" r="38" fill="none" stroke="var(--purple)" stroke-width="14"/><path d="M120 20 V6" ${S}/><circle cx="120" cy="6" r="4" fill="none" ${S}/>
+   ${[84,120,156].map((x,i)=>`<g transform="translate(${x} ${i===1?98:88})">${AT("rotate",`-8;8;-8`,2.6+i*.4)}<path d="M0 0 V24" ${S}/><circle cx="0" cy="18" r="3.5" fill="var(--blue)"/><path d="M0 24 q-9 12 0 30 q9 -18 0 -30z" fill="${BR[i]}" ${S} stroke-width="1.8"/><path d="M0 26 V54" ${S} stroke-width="1.2"/></g>`).join("")}`,1),
+ spongeCut:()=>scene(`<rect x="50" y="22" width="140" height="110" rx="8" fill="var(--yellow)" ${S}/>${Array.from({length:14},(_,i)=>`<circle cx="${62+(i*37)%120}" cy="${36+(i*23)%86}" r="${2+i%3}" fill="#e2a92a"/>`).join("")}
+   <circle cx="120" cy="77" r="45" fill="none" stroke="var(--red)" stroke-width="2" stroke-dasharray="4 4"/>
+   <g><animateMotion dur="4s" repeatCount="indefinite" rotate="auto" path="M120 32 a45 45 0 1 1 -0.1 0z"/>${scissors()}</g>`,1),
+ mix:()=>scene(`<path d="M80 60 L90 130 L150 130 L160 60Z" fill="var(--card)" ${S}/><ellipse cx="120" cy="62" rx="40" ry="9" fill="var(--pink)" ${S}/>
+   <g transform="translate(120 62)"><g>${AT("rotate","0;360",2)}<path d="M-20 0 q10 -6 20 0 q10 6 20 0" fill="none" stroke="#fff" stroke-width="2.5" transform="scale(1 .35)"/></g></g>
+   <rect x="170" y="20" width="26" height="44" rx="4" fill="#fff" ${S}/><path d="M178 20 l5 -10 5 10" fill="#fff" ${S}/><text x="164" y="80" font-size="12">pegamento</text>
+   <circle cx="150" cy="40" r="4" fill="#fff" ${S} stroke-width="1.4">${A("cy","20;56;56",1.6,"0;.6;1")}${A("opacity","1;1;0",1.6,"0;.6;1")}</circle>`,1),
+ paintDonut:()=>scene(`${reveal(70,25,100,100,4,donut("var(--pink)"))}${donut("none")}<g>${AT("translate","70 40;170 40;170 40",4,"0;.7;1")}${brush("var(--pink)")}</g>`,3.9),
+ sprinkles:()=>scene(`${donut("var(--pink)")}${Array.from({length:12},(_,i)=>{const t=i/12*Math.PI*2,r=i%2?40:28,x=120+r*Math.cos(t),y=75+r*Math.sin(t);return `<rect x="${(x-4).toFixed(1)}" y="${(y-1.5).toFixed(1)}" width="8" height="3" rx="1.5" fill="${["var(--yellow)","var(--blue)","#fff","var(--green)"][i%4]}" transform="rotate(${i*47} ${x.toFixed(1)} ${y.toFixed(1)})" opacity="0">${A("opacity",`0;0;1;1`,3,`0;${(i*.05).toFixed(2)};${(i*.05+.03).toFixed(2)};1`)}</rect>`}).join("")}`,2.9),
+ dry:()=>scene(`<g transform="translate(-40 0)">${donut("var(--pink)")}</g><circle cx="190" cy="60" r="32" fill="var(--card)" ${S}/><path d="M190 60 V40" ${S}/><g transform="translate(190 60)"><path d="M0 0 L18 0" ${S}>${AT("rotate","0;360",3)}</path></g>
+   <path d="M170 120 a14 14 0 1 0 18 -16 a10 10 0 1 1 -18 16z" fill="var(--yellow)" ${S}/><text x="150" y="20" font-size="13">toda la noche</text>`,1),
+ inflate:()=>scene(`<g transform="translate(120 128)"><g>${AT("scale","1;1.6;1",3)}<ellipse cx="0" cy="-32" rx="22" ry="28" fill="var(--red)" ${S}/><path d="M-4 -4 l4 6 4 -6z" fill="var(--red)" ${S}/></g></g>`,0),
+ pour:()=>scene(`<ellipse cx="120" cy="108" rx="30" ry="30" fill="var(--red)" ${S}/><path d="M112 78 L112 66 L128 66 L128 78" fill="var(--red)" ${S}/>
+   <path d="M86 18 L154 18 L126 52 L126 70 L114 70 L114 52Z" fill="var(--card)" ${S}/>${[0,1,2,3].map(i=>`<circle cx="${118+i%2*4}" cy="40" r="2.4" fill="#fff" stroke="${LN}" stroke-width="1"><animate attributeName="cy" values="40;100" dur="1.2s" begin="${i*.3}s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0" keyTimes="0;.8;1" dur="1.2s" begin="${i*.3}s" repeatCount="indefinite"/></circle>`).join("")}
+   <text x="164" y="120" font-size="13">poco a poco</text>`,0),
+ squeeze:()=>scene(`<g transform="translate(120 128)"><g>${AT("scale","1.15;1;1",3,"0;.5;1")}<ellipse cx="0" cy="-34" rx="30" ry="30" fill="var(--red)" ${S}/></g></g>
+   <path d="M120 70 q-6 -8 0 -14 q6 -6 0 -14" fill="none" ${S} stroke-dasharray="3 4">${A("opacity","1;1;0;0",3,"0;.4;.5;1")}</path>
+   <circle cx="120" cy="66" r="6" fill="var(--red)" ${S} opacity="0">${A("opacity","0;0;1;1",3,"0;.5;.55;1")}</circle><text x="140" y="60" font-size="13">nudo</text>`,2.9),
+ layer:()=>scene(`<ellipse cx="120" cy="94" rx="32" ry="32" fill="var(--red)" ${S}/>
+   <g>${AT("translate","0 -60;0 -60;0 0;0 0",3,"0;.2;.6;1")}<path d="M86 96 a34 34 0 0 1 68 0 a34 36 0 0 1 -68 0" fill="var(--blue)" opacity=".85" ${S}/></g>
+   <text x="164" y="40" font-size="13">segundo globo</text>`,2.9),
+ faceBalloon:()=>scene(`<ellipse cx="120" cy="82" rx="40" ry="40" fill="var(--blue)" ${S}/>${drawOn("M104 74 v6 M136 74 v6 M106 96 q14 12 28 0",3,`stroke="#fff" stroke-width="4" stroke-linecap="round"`)}
+   <g transform="translate(160 40)">${pencil(DK)}</g>`,2.9),
+ cutTubes:()=>scene(`${tube(60,40,30,90,"#c98b4a")}${tube(105,40,30,90,"#c98b4a")}${tube(150,40,30,90,"#c98b4a")}
+   <path d="M56 70 h38 M101 95 h38 M146 60 h38" stroke="var(--red)" stroke-width="2" stroke-dasharray="3 3"/>
+   <g><animateMotion dur="4s" repeatCount="indefinite" path="M52 70 h44 M97 95 h44 M142 60 h44"/>${scissors()}</g>`,1),
+ paintTubes:()=>scene(`${[["var(--red)",60,70],["var(--blue)",105,95],["var(--green)",150,60]].map(([c,x,y])=>`${tube(x,y,30,130-y,"#c98b4a")}${reveal(x,y,30,130-y,4,`<rect x="${x}" y="${y}" width="30" height="${130-y+6}" fill="${c}" ${S}/>`,"y")}<ellipse cx="${x+15}" cy="${y}" rx="15" ry="5" fill="#d9a066" ${S}/>`).join("")}`,3.9),
+ assembleTubes:()=>scene(`<rect x="40" y="122" width="160" height="16" fill="#c98b4a" ${S}/>${[["var(--red)",64,72],["var(--blue)",104,96],["var(--green)",144,62]].map(([c,x,y],i)=>`<g>${AT("translate",`0 -130;0 -130;0 0;0 0`,4,`0;${(.1+i*.2).toFixed(1)};${(.25+i*.2).toFixed(2)};1`)}${tube(x,y,32,122-y,c)}</g>`).join("")}`,3.9),
+ decorTubes:()=>scene(`<rect x="40" y="122" width="160" height="16" fill="#c98b4a" ${S}/>${[["var(--red)",64,72],["var(--blue)",104,96],["var(--green)",144,62]].map(([c,x,y])=>tube(x,y,32,122-y,c)).join("")}
+   ${drawOn("M74 90 v3 M86 90 v3 M75 100 q5 5 10 0 M114 106 v3 M126 106 v3 M115 114 q5 5 10 0 M154 80 v3 M166 80 v3 M155 90 q5 5 10 0",3,`stroke="#fff" stroke-width="3" stroke-linecap="round"`)}`,2.9),
+ boxes:()=>scene(`<rect x="40" y="56" width="90" height="80" fill="#d9a066" ${S}/><path d="M40 56 L60 40 L150 40 L130 56 M130 56 L150 40 L150 120 L130 136" fill="#c98b4a" ${S}/>
+   <rect x="165" y="92" width="44" height="44" fill="#d9a066" ${S}/><text x="62" y="150" font-size="13">cuerpo</text><text x="168" y="88" font-size="13">cabeza</text>`,0),
+ foil:()=>scene(`<rect x="70" y="40" width="100" height="90" fill="#d9a066" ${S}/>${reveal(70,40,100,90,4,`<rect x="70" y="40" width="100" height="90" fill="#c8ccd6" ${S}/><path d="M80 60 l20 -8 M120 90 l26 -10 M90 110 l18 -6" stroke="#fff" stroke-width="3"/>`)}
+   <g>${AT("translate","70 50;170 50;170 50",4,"0;.7;1")}${brush("#c8ccd6")}</g>`,3.9),
+ head:()=>scene(`${robotBody}<g>${AT("translate","0 -60;0 -60;0 0;0 0",3,"0;.2;.5;1")}${robotHead}</g>`,2.9),
+ arms:()=>scene(`${robotBody}${robotHead}<g>${AT("translate","-50 0;-50 0;0 0;0 0",3,"0;.2;.5;1")}${tube(62,74,22,40,"#c98b4a").replace(/A11 5 0 0 0/,"A11 5 0 0 0")}</g>
+   <g>${AT("translate","50 0;50 0;0 0;0 0",3,"0;.2;.5;1")}${tube(156,74,22,40,"#c98b4a")}</g>${tube(95,130,18,14,"#c98b4a")}${tube(127,130,18,14,"#c98b4a")}`,2.9),
+ buttons:()=>scene(`${robotBody}${robotHead}${tube(62,74,22,40,"#c98b4a")}${tube(156,74,22,40,"#c98b4a")}
+   ${[["var(--red)",105,88],["var(--blue)",120,88],["var(--yellow)",135,88],["var(--green)",120,108]].map(([c,x,y],i)=>`<circle cx="${x}" cy="${y}" r="6" fill="${c}" ${S} stroke-width="1.6" opacity="0">${A("opacity",`0;0;1;1`,3,`0;${i*.15};${i*.15+.04};1`)}</circle>`).join("")}
+   ${drawOn("M108 42 h6 M126 42 h6 M110 54 h20",3,`stroke="${DK}" stroke-width="3" stroke-linecap="round"`,"0;.9;1")}<path d="M120 28 V16" ${S}/><circle cx="120" cy="14" r="4" fill="var(--red)" ${S}/>`,2.9),
+ houseMark:()=>scene(`${house()}${drawOn("M108 136 V96 H132 V136 M74 78 H98 V98 H74 Z M142 78 H166 V98 H142 Z",4,`stroke="${LN}" stroke-width="2"`)}
+   <g><animateMotion dur="4s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;.65;1" calcMode="linear" path="M108 136 V96 H132 V136 M74 78 H98 V98 H74 Z M142 78 H166 V98 H142 Z"/>${pencil()}</g>`,3.9),
+ houseCut:()=>scene(`${house()}<rect x="74" y="78" width="24" height="20" fill="var(--paper)" ${S}/><rect x="142" y="78" width="24" height="20" fill="var(--paper)" ${S}/><rect x="108" y="96" width="24" height="40" fill="var(--paper)" ${S}/>
+   <g transform="translate(108 0)"><g>${AT("scale","1 1;1 1;.35 1;.35 1;1 1",4,"0;.3;.5;.8;1")}<rect x="0" y="96" width="24" height="40" fill="#c98b4a" ${S}/></g></g>`,2),
+ roof:()=>scene(`${house()}<g>${AT("translate","0 -60;0 -60;0 0;0 0",3,"0;.2;.5;1")}${roof}</g>`,2.9),
+ paintHouse:()=>scene(`${house()}${reveal(60,62,120,74,4,house("var(--yellow)"))}${roof}<rect x="108" y="96" width="24" height="40" fill="var(--blue)" ${S}/><g>${AT("translate","60 80;180 80;180 80",4,"0;.7;1")}${brush("var(--yellow)")}</g>`,3.9),
+ houseDetails:()=>scene(`${house("var(--yellow)")}${roof}<rect x="108" y="96" width="24" height="40" fill="var(--blue)" ${S}/><rect x="74" y="78" width="24" height="20" fill="var(--paper)" ${S}/><rect x="142" y="78" width="24" height="20" fill="var(--paper)" ${S}/>
+   ${drawOn("M64 70 h10 M66 76 h10 M150 112 h12 M154 118 h12 M64 120 h12",3,`stroke="var(--orange)" stroke-width="2.4"`)}<text x="114" y="114" font-size="14" style="fill:#fff" opacity="0">7${A("opacity","0;0;1;1",3,"0;.6;.65;1")}</text>
+   ${[40,200].map((x,i)=>`<g opacity="0">${A("opacity",`0;0;1;1`,3,`0;${.3+i*.2};${.35+i*.2};1`)}<path d="M${x} 136 V116" stroke="var(--green)" stroke-width="3"/><circle cx="${x}" cy="112" r="7" fill="var(--pink)" ${S}/></g>`).join("")}`,2.9)
+};
+
+
+/* ---------- más escenas ---------- */
+const flipY=(at,body,dur=3,kt="0;.2;.6;1")=>`<g transform="translate(0 ${at})"><g>${AT("scale","1 1;1 1;1 -1;1 -1",dur,kt)}<g transform="translate(0 ${-at})">${body}</g></g></g>`;
+const morph=(a,b,fill,dur=3,kt="0;.2;.6;1")=>`<path d="${a}" fill="${fill}" ${S}>${A("d",`${a};${a};${b};${b}`,dur,kt)}</path>`;
+const EMO={
+ heart:{bg:"#f5c43a",d:`<path d="M30 28 c-6 -10 -20 -2 -12 10 l12 12 12 -12 c8 -12 -6 -20 -12 -10z" fill="#e2483d"/><path d="M70 28 c-6 -10 -20 -2 -12 10 l12 12 12 -12 c8 -12 -6 -20 -12 -10z" fill="#e2483d"/><path d="M30 64 q20 18 40 0" fill="none" stroke="#7a4a12" stroke-width="5" stroke-linecap="round"/>`},
+ laugh:{bg:"#f5c43a",d:`<path d="M24 40 q8 -10 16 0 M60 40 q8 -10 16 0" stroke="#7a4a12" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M26 56 h48 q-4 26 -24 26 q-20 0 -24 -26z" fill="#7a4a12"/><path d="M28 56 h44 v7 h-44z" fill="#fff"/><path d="M16 44 q-8 10 -2 16 q6 -4 2 -16z M84 44 q8 10 2 16 q-6 -4 -2 -16z" fill="#4f9bf0"/>`},
+ cry:{bg:"#f5c43a",d:`<path d="M24 38 q8 7 16 0 M60 38 q8 7 16 0" stroke="#7a4a12" stroke-width="5" fill="none" stroke-linecap="round"/><rect x="28" y="44" width="9" height="50" rx="4" fill="#4f9bf0"/><rect x="63" y="44" width="9" height="50" rx="4" fill="#4f9bf0"/><ellipse cx="50" cy="66" rx="9" ry="8" fill="#7a4a12"/>`},
+ money:{bg:"#f5c43a",d:`<path d="M32 26 v26 M24 32 q0 -6 8 -6 q8 0 8 6 q0 6 -8 6 q-8 0 -8 6 q0 6 8 6 q8 0 8 -6 M68 26 v26 M60 32 q0 -6 8 -6 q8 0 8 6 q0 6 -8 6 q-8 0 -8 6 q0 6 8 6 q8 0 8 -6" stroke="#2f9a4a" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M28 60 q22 18 44 0z" fill="#7a4a12"/><rect x="38" y="64" width="24" height="22" rx="2" fill="#3fae5b" stroke="#2b2a33" stroke-width="2"/>`},
+ sick:{bg:"#62c46f",d:`<path d="M22 38 l6 5 6 -5 6 5 M58 38 l6 5 6 -5 6 5" stroke="#2b2a33" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 68 q5 -7 11 0 t11 0 t11 0 t11 0" fill="none" stroke="#2b2a33" stroke-width="4" stroke-linecap="round"/><ellipse cx="22" cy="54" rx="7" ry="4" fill="#3d9a4c"/><ellipse cx="78" cy="54" rx="7" ry="4" fill="#3d9a4c"/>`},
+ cold:{bg:"#5aa6ff",d:`<circle cx="34" cy="38" r="6" fill="#2b2a33"/><circle cx="66" cy="38" r="6" fill="#2b2a33"/><rect x="24" y="56" width="52" height="20" rx="7" fill="#fff" stroke="#2b2a33" stroke-width="3"/><path d="M37 56 v20 M50 56 v20 M63 56 v20 M24 66 h52" stroke="#2b2a33" stroke-width="2"/>`}
+};
+const emoSVG=(k,extra="")=>`<svg viewBox="0 0 100 100"${extra}><rect width="100" height="100" fill="${EMO[k].bg}"/>${EMO[k].d}</svg>`;
+const NET="M107 8 H133 V60 H159 V86 H133 V112 H107 V86 H81 V60 H107 Z", NETF="M107 34 H133 M107 60 H133 M107 86 H133 M107 60 V86 M133 60 V86";
+const netWrap=b=>`<g transform="translate(-30 0) scale(1.25)">${b}</g>`;
+const fanWedges=(open)=>Array.from({length:9},(_,i)=>{const th=-64+i*16,r=104,a=8*Math.PI/180;const x=(r*Math.sin(a)).toFixed(1),y=(-r*Math.cos(a)).toFixed(1);
+  return `<g transform="translate(120 138)"><g ${open?`transform="rotate(${th})"`:""}>${open?"":AT("rotate",`0;0;${th};${th};0`,4,"0;.2;.55;.9;1")}<path d="M0 0 L-${x} ${y} A${r} ${r} 0 0 1 ${x} ${y}Z" fill="${i%2?"var(--yellow)":"var(--pink)"}" ${S} stroke-width="2"/></g></g>`}).join("")+`<circle cx="120" cy="138" r="6" fill="var(--blue)" ${S}/>`;
+const PASTA=[["var(--red)",60,58,20],["var(--blue)",92,46,-30],["var(--yellow)",128,60,40],["var(--green)",160,50,-10],["var(--purple)",84,86,60],["var(--orange)",140,90,-50]];
+const pasta=(c,x,y,r)=>`<rect x="${x-11}" y="${y-5}" width="22" height="10" rx="4" fill="${c}" ${S} stroke-width="2" transform="rotate(${r} ${x} ${y})"/>`;
+const BOAT="M50 80 L90 80 L120 30 L150 80 L190 80 L160 115 L80 115Z";
+const cube3d=(mode)=>`<div class="ill3d c-${mode}" role="img" aria-label="Cubo que se arma"><div class="c3stage"><div class="net">
+  <div class="cf base"></div>
+  <div class="cf wn"><div class="cf lid">${mode==="fold"?`<span class="tp" style="left:20px;top:-6px;width:16px;height:12px"></span>`:""}</div></div>
+  <div class="cf ws">${emoSVG("heart",' style="transform:rotate(180deg)"')}</div>
+  <div class="cf we"><span class="tp" style="left:-6px;top:20px;width:12px;height:16px"></span></div>
+  <div class="cf ww"><span class="tp" style="right:-6px;top:20px;width:12px;height:16px"></span></div>
+ </div></div>${mode==="fold"?`<span class="c3lbl">dobla y pega<br>las orillas</span>`:""}${mode==="fill"?[0,1,2].map(i=>`<span class="bit" style="animation-delay:${i*.6}s"></span>`).join(""):""}${mode==="close"?`<span class="c3lbl sq">¡squish!</span>`:""}</div>`;
+
+Object.assign(SC,{
+ bm1:()=>scene(`<path d="M60 75 L180 75 L120 135Z" fill="var(--red)" ${S}/>${flipY(75,`<path d="M60 75 L120 15 L180 75Z" fill="var(--red)" opacity=".8" ${S}/>`)}<text x="186" y="80" font-size="12">dobla</text>`,2.9),
+ bm2:()=>scene(`<path d="M60 75 L180 75 L120 135Z" fill="var(--red)" ${S}/>${morph("M60 75 L120 75 L90 105Z","M120 135 L120 75 L90 105Z","#f28a80")}${morph("M180 75 L120 75 L150 105Z","M120 135 L120 75 L150 105Z","#f28a80")}<text x="150" y="146" font-size="12">puntas abajo</text>`,2.9),
+ bm3:()=>scene(`<path d="M70 40 L170 40 L120 110Z" fill="var(--red)" ${S}/><path d="M86 40 L154 40 L120 80Z" fill="#c9372d" ${S}/>
+   <g>${AT("translate","-10 0;-10 0;26 0;26 0",3,"0;.2;.6;1")}${A("opacity","1;1;0;0",3,"0;.5;.65;1")}<path d="M40 45 L76 45 L76 80Z" fill="#f28a80" ${S}/></g>
+   <g>${AT("translate","10 0;10 0;-26 0;-26 0",3,"0;.2;.6;1")}${A("opacity","1;1;0;0",3,"0;.5;.65;1")}<path d="M200 45 L164 45 L164 80Z" fill="#f28a80" ${S}/></g>
+   <text x="120" y="135" font-size="13" text-anchor="middle">mete las puntas en el bolsillo</text>`,2.9),
+ bm4:()=>scene(`<path d="M50 24 L190 24 L120 132Z" fill="var(--red)" ${S}/>
+   <g opacity="0">${A("opacity","0;0;1;1",3,"0;.15;.2;1")}<circle cx="96" cy="46" r="11" fill="#fff" ${SD}/><circle cx="144" cy="46" r="11" fill="#fff" ${SD}/><circle cx="98" cy="48" r="5" fill="${DK}"/><circle cx="142" cy="48" r="5" fill="${DK}"/></g>
+   <path d="M86 72 L94 86 L102 72 L110 86 L118 72 L126 86 L134 72 L142 86 L150 72Z" fill="#fff" ${SD} stroke-width="1.8" opacity="0">${A("opacity","0;0;1;1",3,"0;.45;.5;1")}</path>
+   <g transform="translate(180 110)">${pencil(DK)}</g>`,2.9),
+ bm5:()=>scene(`<path d="M20 40 L120 30 L120 140 L20 140Z" fill="var(--card)" ${S}/><path d="M120 30 L210 40 L210 140 L120 140Z" fill="var(--card)" ${S}/>${[60,74,88,102,116].map(y=>`<path d="M34 ${y} h70 M134 ${y+4} h60" stroke="var(--soft)" stroke-width="1.5"/>`).join("")}
+   <g>${AT("translate","30 -28;30 -28;0 0;0 0",3,"0;.2;.55;1")}<path d="M160 36 L212 40 L212 92Z" fill="var(--red)" ${S}/><circle cx="186" cy="48" r="5" fill="#fff" ${SD} stroke-width="1.5"/><circle cx="201" cy="52" r="5" fill="#fff" ${SD} stroke-width="1.5"/><path d="M186 60 l4 6 4 -6 4 6 4 -6" fill="#fff" ${SD} stroke-width="1.2"/></g>`,2.9),
+ boat1:()=>scene(`<rect x="50" y="85" width="140" height="45" fill="var(--blue)" ${S}/>${flipY(85,`<rect x="50" y="40" width="140" height="45" fill="var(--blue)" opacity=".8" ${S}/>`)}<line x1="40" y1="85" x2="200" y2="85" stroke="${LN}" stroke-width="1.5" stroke-dasharray="4 4"/>`,2.9),
+ boat2:()=>scene(`<rect x="50" y="50" width="140" height="90" fill="var(--blue)" ${S}/><line x1="120" y1="44" x2="120" y2="146" stroke="${LN}" stroke-width="1.5" stroke-dasharray="4 4"/>${morph("M50 50 L120 50 L50 120Z","M120 120 L120 50 L50 120Z","#8cc0f2")}${morph("M190 50 L120 50 L190 120Z","M120 120 L120 50 L190 120Z","#8cc0f2")}`,2.9),
+ boat3:()=>scene(`<path d="M50 120 L120 50 L190 120Z" fill="#8cc0f2" ${S}/>${flipY(120,`<rect x="50" y="120" width="140" height="20" fill="var(--blue)" ${S}/>`)}<text x="196" y="134" font-size="12">arriba</text>`,2.9),
+ boat4:()=>scene(`${morph("M50 125 L120 50 L190 125 L120 125Z","M85 90 L120 25 L155 90 L120 140Z","var(--blue)",3.5)}<path d="M40 80 h20 M200 80 h-20" ${S}/><path d="M52 74 l8 6 -8 6 M188 74 l-8 6 8 6" fill="none" ${S}/><text x="120" y="148" font-size="13" text-anchor="middle">abre y aplasta</text>`,3.4),
+ boat5:()=>scene(`<g transform="translate(0 4)"><g>${AT("rotate","-4 120 100;4 120 100;-4 120 100",3)}${AT("translate","0 0;0 4;0 0",3)}<path d="${BOAT}" fill="var(--blue)" ${S}/><path d="M90 80 L120 115 L150 80" fill="none" ${S} stroke-width="1.6"/></g></g>
+   <g>${AT("translate","0 0;-60 0",2)}<path d="M-20 122 q15 -8 30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 V150 H-20Z" fill="color-mix(in srgb,var(--blue) 35%,var(--card))" ${S}/></g>`,1),
+ fan1:()=>scene(`${sheet(40,25,160,100)}${reveal(40,25,160,100,4,[0,1,2,3,4].map(i=>`<rect x="40" y="${25+i*20}" width="160" height="20" fill="${["var(--pink)","var(--yellow)","var(--blue)","var(--green)","var(--orange)"][i]}"/>`).join(""))}${sheet(40,25,160,100).replace('fill="var(--card)"','fill="none"')}<g>${AT("translate","40 40;200 40;200 40",4,"0;.7;1")}${pencil("var(--pink)")}</g>`,3.9),
+ fan2:()=>{const flat=Array.from({length:9},(_,i)=>`${i?"L":"M"}${30+i*22.5} 75`).join(" "),zig=Array.from({length:9},(_,i)=>`${i?"L":"M"}${80+i*10} ${i%2?100:50}`).join(" ");
+   return scene(`<path d="${flat}" fill="none" stroke="var(--pink)" stroke-width="7" stroke-linejoin="round">${A("d",`${flat};${flat};${zig};${zig}`,3.5,"0;.2;.7;1")}</path><text x="120" y="140" font-size="13" text-anchor="middle">dobla como acordeón: arriba, abajo, arriba…</text>`,3.4)},
+ fan3:()=>scene(`${[0,1,2,3,4,5].map(i=>`<rect x="${106+(i%2)*2}" y="${22+i*18}" width="26" height="18" fill="${["var(--pink)","var(--yellow)","var(--blue)","var(--green)","var(--orange)","var(--pink)"][i]}" ${S} stroke-width="1.6"/>`).join("")}
+   <rect x="100" y="112" width="40" height="14" rx="3" fill="var(--tape)" stroke="${LN}" stroke-width="1.4" opacity="0">${A("opacity","0;0;1;1",3,"0;.3;.4;1")}</rect><text x="150" y="124" font-size="13">cinta abajo</text>`,2.9),
+ fan4:()=>scene(fanWedges(false),2.2),
+ pasta1:()=>scene(`<ellipse cx="110" cy="75" rx="90" ry="55" fill="var(--card)" ${S}/>${PASTA.map(([c,x,y,r])=>pasta("#f2d79a",x,y,r)).join("")}${reveal(20,20,180,110,4,PASTA.map(p=>pasta(...p)).join(""))}
+   <g>${AT("translate","30 30;190 30;190 30",4,"0;.7;1")}${brush("var(--red)")}</g><circle cx="214" cy="30" r="14" fill="var(--card)" ${S}/><path d="M214 30 v-8 M214 30 h6" ${S}/>`,3.9),
+ pasta2:()=>{const P="M30 40 Q120 170 210 40";return scene(`<path d="${P}" fill="none" stroke="${LN}" stroke-width="2"/><circle cx="30" cy="40" r="3" fill="${LN}"/>
+   ${PASTA.map(([c],i)=>{const p=(.72-i*.09).toFixed(2),t=(i*.11).toFixed(2),t2=(i*.11+.2).toFixed(2);return `<g><animateMotion dur="5s" repeatCount="indefinite" rotate="auto" keyPoints="0;0;${p};${p}" keyTimes="0;${t};${t2};1" calcMode="linear" path="${P}"/><rect x="-11" y="-5" width="22" height="10" rx="4" fill="${c}" ${S} stroke-width="2"/></g>`}).join("")}
+   <text x="120" y="24" font-size="13" text-anchor="middle">mete la pasta por el hilo</text>`,4.9)},
+ pasta3:()=>{const pts=Array.from({length:12},(_,i)=>{const t=i/12*Math.PI*2;return [120+70*Math.cos(t),82+48*Math.sin(t),t*180/Math.PI+90]});
+   return scene(`<ellipse cx="120" cy="82" rx="70" ry="48" fill="none" stroke="${LN}" stroke-width="2"/>${pts.map(([x,y,a],i)=>pasta(PASTA[i%6][0],x,y,a)).join("")}
+   <circle cx="120" cy="34" r="7" fill="var(--red)" ${S}>${A("r","0;0;9;7;7",3,"0;.3;.42;.5;1")}</circle><text x="136" y="22" font-size="13">nudo doble</text>`,2.9)},
+ cubeNet:()=>scene(netWrap(`<path d="${NET}" fill="var(--card)" stroke="none"/>${drawOn(NET+" "+NETF,4,`stroke="${LN}" stroke-width="2"`)}<g><animateMotion dur="4s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;.65;1" calcMode="linear" path="${NET}"/><g transform="scale(.8)">${pencil()}</g></g>`)+`<text x="186" y="40" font-size="12">6 cuadros</text><text x="186" y="54" font-size="12">de 5 cm</text>`,3.9),
+ cubeFace:()=>scene(`${sheet(70,10,100,130)}<rect x="80" y="25" width="80" height="80" fill="var(--card)" ${S}/>
+   ${drawOn("M96 42 c-5 -8 -16 -2 -10 8 l10 10 10 -10 c6 -10 -5 -16 -10 -8z M144 42 c-5 -8 -16 -2 -10 8 l10 10 10 -10 c6 -10 -5 -16 -10 -8z M96 76 q24 16 48 0",4,S)}
+   <text x="120" y="128" font-size="13" text-anchor="middle">cara de corazones</text>`,3.9),
+ cubeColor:()=>scene(netWrap(`<path d="${NET}" fill="var(--card)"/>${reveal(80,5,82,110,4,`<path d="${NET}" fill="#f5c43a"/><g transform="translate(107 86) scale(.26)">${EMO.heart.d}</g>`)}<path d="${NET} ${NETF}" fill="none" stroke="${LN}" stroke-width="2"/>`)+`<g transform="translate(60 120)">${AT("translate","0 -100;110 -100;110 -100",4,"0;.7;1")}${pencil("#f5c43a")}</g>`,3.9),
+ cubeTape:()=>scene(netWrap(`<path d="${NET}" fill="#f5c43a" ${S} stroke-width="2"/><g transform="translate(107 86) scale(.26)">${EMO.heart.d}</g>${[0,1,2,3].map(i=>{const t=.1+i*.17;return `<rect x="78" y="${4+i*28}" width="84" height="30" fill="var(--tape)" stroke="${LN}" stroke-width="1"><animate attributeName="x" values="-120;-120;78;78" keyTimes="0;${t};${(t+.12).toFixed(2)};1" dur="5s" repeatCount="indefinite"/></rect>`}).join("")}`),4.9),
+ cubeCut:()=>scene(netWrap(`<path d="${NET}" fill="#f5c43a" ${S} stroke-width="2"/><path d="${NETF}" stroke="${LN}" stroke-width="1.2" stroke-dasharray="3 3"/><g transform="translate(107 86) scale(.26)">${EMO.heart.d}</g><g><animateMotion dur="6s" repeatCount="indefinite" rotate="auto" path="${NET}"/><g transform="scale(.8)">${scissors()}</g></g>`)+`<text x="182" y="140" font-size="12">no cortes</text><text x="182" y="128" font-size="12">las rayitas:</text>`,2),
+ cubeFold:()=>cube3d("fold"),
+ cubeFill:()=>cube3d("fill"),
+ cubeClose:()=>cube3d("close")
+});
+/* ---------- miniaturas ---------- */
+const TH={
+ pulsera:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="36" ry="24" fill="none" stroke="var(--red)" stroke-width="9"/><ellipse cx="50" cy="50" rx="36" ry="24" fill="none" stroke="var(--blue)" stroke-width="9" stroke-dasharray="10 12"/><ellipse cx="50" cy="50" rx="36" ry="24" fill="none" stroke="var(--yellow)" stroke-width="9" stroke-dasharray="6 16" stroke-dashoffset="5"/></svg>`,
+ popup:`<svg viewBox="0 0 100 100"><path d="M10 15 H90 V55 H10Z" fill="var(--pink)" ${S}/><path d="M10 55 H90 L98 90 H2Z" fill="var(--pink)" opacity=".8" ${S}/><rect x="34" y="34" width="32" height="20" fill="var(--yellow)" ${S}/><path d="M50 34 v-8" ${S}/></svg>`,
+ atrapa:`<svg viewBox="0 0 100 100"><circle cx="50" cy="38" r="26" fill="none" stroke="var(--purple)" stroke-width="9"/><path d="M50 12 L66 56 L28 28 L72 28 L34 56Z" fill="none" stroke="var(--orange)" stroke-width="2"/>${[30,50,70].map((x,i)=>`<path d="M${x} 64 V74 M${x} 74 q-6 8 0 20 q6 -12 0 -20z" fill="${BR[i]}" ${S} stroke-width="1.8"/>`).join("")}</svg>`,
+ esponja:`<svg viewBox="0 0 100 100"><path d="M50 14 a36 36 0 1 0 .1 0z M50 38 a12 12 0 1 1 -.1 0z" fill="var(--pink)" fill-rule="evenodd" ${S}/><rect x="30" y="30" width="8" height="3" fill="var(--yellow)" transform="rotate(30 34 31)"/><rect x="64" y="60" width="8" height="3" fill="var(--blue)" transform="rotate(-20 68 61)"/><rect x="62" y="28" width="8" height="3" fill="#fff"/></svg>`,
+ globo:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" fill="var(--red)" ${S}/><path d="M40 44 v5 M60 44 v5 M40 60 q10 9 20 0" stroke="#fff" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle cx="50" cy="88" r="4" fill="var(--red)" ${S}/></svg>`,
+ portalapices:`<svg viewBox="0 0 100 100"><rect x="10" y="84" width="80" height="10" fill="#c98b4a" ${S}/>${tube(16,40,20,44,"var(--red)")}${tube(40,56,20,28,"var(--blue)")}${tube(64,30,20,54,"var(--green)")}<path d="M26 40 L22 14" stroke="var(--yellow)" stroke-width="5"/></svg>`,
+ robot:`<svg viewBox="0 0 100 100"><rect x="28" y="44" width="44" height="44" fill="#c8ccd6" ${S}/><rect x="36" y="16" width="28" height="26" fill="#c8ccd6" ${S}/><circle cx="44" cy="28" r="3" fill="${DK}"/><circle cx="56" cy="28" r="3" fill="${DK}"/><circle cx="42" cy="60" r="4" fill="var(--red)"/><circle cx="56" cy="60" r="4" fill="var(--blue)"/><rect x="14" y="48" width="12" height="28" fill="#c98b4a" ${S}/><rect x="74" y="48" width="12" height="28" fill="#c98b4a" ${S}/></svg>`,
+ casita:`<svg viewBox="0 0 100 100"><rect x="18" y="44" width="64" height="46" fill="var(--yellow)" ${S}/><path d="M10 46 L50 14 L90 46Z" fill="var(--red)" ${S}/><rect x="42" y="62" width="16" height="28" fill="var(--blue)" ${S}/><rect x="24" y="54" width="12" height="12" fill="var(--paper)" ${S}/><rect x="64" y="54" width="12" height="12" fill="var(--paper)" ${S}/></svg>`
+};
+
+Object.assign(TH,{
+ separador:`<svg viewBox="0 0 100 100"><path d="M12 16 H88 L50 88Z" fill="var(--red)" ${S}/><circle cx="37" cy="32" r="8" fill="#fff" ${SD}/><circle cx="63" cy="32" r="8" fill="#fff" ${SD}/><circle cx="38" cy="33" r="3.5" fill="${DK}"/><circle cx="62" cy="33" r="3.5" fill="${DK}"/><path d="M32 50 l4.5 8 4.5 -8 4.5 8 4.5 -8 4.5 8 4.5 -8 4.5 8" fill="#fff" ${SD} stroke-width="1.6"/></svg>`,
+ barco:`<svg viewBox="0 0 240 150"><path d="${BOAT}" fill="var(--blue)" ${S} stroke-width="4"/><path d="M10 124 q15 -10 30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0" fill="none" stroke="var(--blue)" stroke-width="5" stroke-linecap="round"/></svg>`,
+ abanico:`<svg viewBox="0 10 240 135">${fanWedges(true)}</svg>`,
+ collar:`<svg viewBox="0 0 240 150"><ellipse cx="120" cy="75" rx="80" ry="56" fill="none" stroke="${LN}" stroke-width="3"/>${Array.from({length:10},(_,i)=>{const t=i/10*Math.PI*2;return pasta(PASTA[i%6][0],120+80*Math.cos(t),75+56*Math.sin(t),t*180/Math.PI+90).replace(/x="([\d.-]+)" y="([\d.-]+)" width="22" height="10"/,(m,x,y)=>`x="${(+x-3).toFixed(1)}" y="${(+y-2).toFixed(1)}" width="28" height="14"`)}).join("")}</svg>`,
+ cubo:`<svg viewBox="0 0 100 100"><path d="M18 34 L40 14 L92 14 L70 34Z" fill="#5aa6ff" ${S}/><path d="M70 34 L92 14 L92 66 L70 86Z" fill="#e2483d" ${S}/><rect x="18" y="34" width="52" height="52" fill="#f5c43a" ${S}/><g transform="translate(18 34) scale(.52)">${EMO.heart.d}</g></svg>`
+});
+const ICONS={
+manualidades:`<svg viewBox="0 0 110 90"><path d="M20 70 L60 20 L72 30 L32 80 Z" fill="var(--yellow)" ${S} stroke-width="3"/><path d="M60 20 L68 10 L80 20 L72 30" fill="var(--pink)" ${S} stroke-width="3"/><path d="M20 70 L14 86 L32 80" fill="var(--paper)" ${S} stroke-width="3"/><path d="M78 60 q10 -14 22 0 q-12 14 -22 0z" fill="var(--blue)" ${S} stroke-width="3"/><circle cx="88" cy="30" r="4" fill="var(--red)"/><circle cx="96" cy="44" r="3" fill="var(--green)"/></svg>`,
+squishies:`<svg viewBox="0 0 110 90"><path d="M15 60 q0 -38 40 -40 q40 2 40 40 q0 18 -40 18 q-40 0 -40 -18z" fill="var(--pink)" ${S} stroke-width="3"/><circle cx="42" cy="50" r="5" fill="${DK}"/><circle cx="68" cy="50" r="5" fill="${DK}"/><path d="M48 62 q7 7 14 0" fill="none" ${SD} stroke-width="3"/><ellipse cx="32" cy="60" rx="6" ry="3" fill="var(--red)" opacity=".6"/><ellipse cx="78" cy="60" rx="6" ry="3" fill="var(--red)" opacity=".6"/></svg>`,
+carton:`<svg viewBox="0 0 110 90"><path d="M20 38 L55 22 L90 38 L90 78 L20 78 Z" fill="var(--orange)" ${S} stroke-width="3"/><path d="M20 38 L55 52 L90 38 M55 52 L55 78" fill="none" ${S} stroke-width="3"/><path d="M20 38 L8 26 L42 12 L55 22" fill="var(--yellow)" ${S} stroke-width="3"/><path d="M90 38 L102 26 L68 12 L55 22" fill="var(--yellow)" ${S} stroke-width="3"/></svg>`
+};
+
+/* ---------- contenido ---------- */
+const CATS=[
+ {id:"manualidades",name:"Manualidades",desc:"Pulseras, tarjetas y cositas bonitas con papel e hilo.",color:"var(--blue)",projects:[
+  {id:"pulsera",name:"Pulsera trenzada",desc:"Una pulsera de la amistad con tres colores.",time:"20 min",level:"Fácil",
+   mats:["Hilo de bordar en 3 colores","Tijeras","Cinta adhesiva","Regla"],
+   steps:[
+    ["Corta los hilos","Mide tres hilos de 60 cm, uno de cada color. Son largos porque al trenzar se encogen.","",SC.measure],
+    ["Haz un nudo","Junta los tres hilos y haz un nudo a 8 cm de la punta. Pega el nudo a la mesa con cinta.","Así la pulsera no se mueve mientras trenzas.",SC.knot],
+    ["Trenza","Pasa el hilo de la derecha al centro, luego el de la izquierda al centro. Repite una y otra vez.","Jala parejo para que la trenza quede del mismo grosor.",SC.braid],
+    ["Amárrala","Cuando rodee tu muñeca, haz otro nudo. Pide que te la amarren y corta lo que sobre.","Deja 3 cm en cada punta para poder quitarla después.",SC.wrist]]},
+  {id:"popup",name:"Tarjeta pop-up",desc:"Al abrirla, un pastel salta de la hoja.",time:"30 min",level:"Fácil",
+   mats:["2 hojas de cartulina","Tijeras","Pegamento en barra","Crayones o plumones","Regla y lápiz"],
+   steps:[
+    ["Dobla la base","Dobla una cartulina a la mitad. Esta será la tarjeta por dentro.","",()=>SC.fold("var(--pink)")],
+    ["Haz dos cortes","Con la tarjeta doblada, corta dos líneas de 4 cm desde el doblez, separadas 5 cm.","",SC.cutTabs],
+    ["Empuja la pestaña","Abre la tarjeta y empuja hacia adentro el rectángulo que cortaste. Cierra y aplasta.","Ese escalón es el que hará saltar tu dibujo.",SC.push],
+    ["Dibuja el pastel","Dibuja un pastel en otra cartulina y recórtalo.","Que no sea más alto que la tarjeta cerrada.",SC.drawCake],
+    ["Pégalo","Pega el pastel al frente del escalón. Abre y cierra para probar.","",SC.popup],
+    ["Haz la portada","Pega la segunda cartulina doblada por fuera y decora la portada.","",SC.cover]]},
+  {id:"atrapa",name:"Atrapasueños de plato",desc:"Con un plato de papel, estambre y plumas.",time:"40 min",level:"Medio",
+   mats:["Plato de papel","Estambre","Perforadora","Cuentas o chaquiras","Plumas","Pintura o crayones"],
+   steps:[
+    ["Recorta el centro","Recorta el centro del plato y deja un aro de 3 cm de ancho.","Pide ayuda para empezar el corte.",SC.plateCut],
+    ["Decora el aro","Pinta o colorea el aro con tus colores favoritos.","",SC.paintRing],
+    ["Perfora","Haz 10 a 12 hoyos alrededor del aro con la perforadora.","",SC.punch],
+    ["Teje la red","Amarra el estambre en un hoyo y crúzalo de lado a lado por todos los hoyos. Mete cuentas en el camino.","",SC.weave],
+    ["Plumas y colgador","Cuelga tres tiras de estambre abajo con plumas y una arriba para colgarlo.","",SC.hang]]},
+  {id:"separador",name:"Separador monstruo",desc:"Un monstruo de papel que se come la esquina de tu libro.",time:"15 min",level:"Fácil",
+   steps:[
+    ["Dobla en triángulo","Usa un cuadro de papel de 15 cm. Dóblalo por la diagonal para hacer un triángulo.","Si tu hoja es rectangular, dobla una esquina y recorta lo que sobra.",SC.bm1],
+    ["Puntas abajo","Con la punta larga hacia abajo, dobla las dos esquinas de los lados hasta la punta de abajo. Desdobla.","Esas marcas te guían en el siguiente paso.",SC.bm2],
+    ["El bolsillo","Dobla solo la capa de arriba de la punta hacia el borde. Luego dobla las esquinas y mételas dentro de ese bolsillo.","",SC.bm3],
+    ["Dale cara","Dibuja o pega ojos grandes y una fila de dientes en el bolsillo.","Ojos de papel blanco recortados se ven increíbles.",SC.bm4],
+    ["¡A leer!","Ponlo en la esquina de la página donde te quedaste.","",SC.bm5]]},
+  {id:"barco",name:"Barco de papel",desc:"El clásico barquito que sí flota un ratito.",time:"10 min",level:"Fácil",
+   steps:[
+    ["Dobla a la mitad","Usa una hoja tamaño carta. Dóblala a la mitad de arriba hacia abajo.","",SC.boat1],
+    ["Esquinas al centro","Con el doblez arriba, dobla las dos esquinas de arriba hasta la raya del centro.","",SC.boat2],
+    ["Sube las tiras","Dobla la tira de abajo hacia arriba. Voltea y haz lo mismo del otro lado. Ya tienes un gorro.","",SC.boat3],
+    ["Abre y aplasta","Mete los dedos dentro del gorro, abre y aplasta hasta formar un rombo. Dobla las puntas de abajo hacia arriba y repite.","",SC.boat4],
+    ["Jala las puntas","Jala con cuidado las dos puntas de arriba hacia afuera. ¡Listo tu barco!","Pásale crayón por abajo y aguanta más en el agua.",SC.boat5]]},
+  {id:"abanico",name:"Abanico de rayas",desc:"Un abanico de colores para el calor.",time:"15 min",level:"Fácil",
+   steps:[
+    ["Dibuja rayas","Colorea una hoja con rayas de muchos colores, de lado a lado.","",SC.fan1],
+    ["Dobla tipo acordeón","Dobla 2 cm hacia arriba, voltea y dobla otros 2 cm. Repite hasta el final.","Aplasta bien cada doblez con la uña.",SC.fan2],
+    ["Amarra abajo","Junta los dobleces y enrolla cinta en la parte de abajo.","",SC.fan3],
+    ["Ábrelo","Abre la parte de arriba como una cola de pavo real. ¡A echarse aire!","",SC.fan4]]},
+  {id:"collar",name:"Collar de pasta",desc:"Pasta de tubito pintada de colores.",time:"30 min + secado",level:"Fácil",
+   steps:[
+    ["Pinta la pasta","Pinta pasta de tubito (penne o macarrón) de muchos colores y déjala secar 1 hora.","Si la metes en una bolsa con gotas de colorante y la agitas, se pinta solita.",SC.pasta1],
+    ["Ensarta","Corta un hilo de 70 cm, ponle cinta en la punta y mete la pasta una por una.","La cinta en la punta hace de aguja.",SC.pasta2],
+    ["Amarra","Junta las puntas y haz un nudo doble. ¡Póntelo!","",SC.pasta3]]}]},
+ {id:"squishies",name:"Squishies",desc:"Animalitos suavecitos para apretar, hechos en casa.",color:"var(--pink)",projects:[
+  ...["rana","vaquita","pez","gatito","pulpo"].map(animalProject),
+  {id:"cubo",name:"Cubo squishy emoji",desc:"Un cubito de papel con carita de emoji.",time:"45 min",level:"Medio",trace:true,
+   steps:[
+    ["Dibuja la plantilla","Dibuja 6 cuadros de 5 cm en forma de cruz: cuatro en columna y uno a cada lado del tercero.","Usa Calcar con cámara para copiar la plantilla.",SC.cubeNet],
+    ["Dibuja la carita","En el cuadro de abajo dibuja la cara: corazones, risa, llanto… la que quieras.","",SC.cubeFace],
+    ["Colorea","Colorea todos los cuadros del mismo color. Amarillo es el clásico.","",SC.cubeColor],
+    ["Forra con cinta","Cubre toda la cruz con cinta ancha transparente.","",SC.cubeTape],
+    ["Recorta","Recorta por la orilla de la cruz. No cortes las rayitas de en medio: son los dobleces.","",SC.cubeCut],
+    ["Arma y pega","Dobla los cuadros hacia arriba para formar la caja y pega cada orilla con un pedacito de cinta. Deja la tapa abierta.","",SC.cubeFold],
+    ["Rellena","Llena el cubo con pedacitos de bolsa de plástico hasta que quede gordito.","",SC.cubeFill],
+    ["Cierra la tapa","Baja la tapa y pégala con cinta. ¡Apriétalo!","Haz varios con caras distintas y hazles una torre.",SC.cubeClose]]},
+  {id:"esponja",name:"Donut de esponja",desc:"Una esponja nueva convertida en donut.",time:"45 min + secado",level:"Medio",
+   mats:["Esponja de cocina nueva (sin fibra)","Tijeras","Pintura acrílica","Pincel","Pegamento blanco"],
+   steps:[
+    ["Recorta la forma","Dibuja un círculo con un hoyo en medio y recórtalo. Redondea las orillas.","Quita la parte verde rasposa si la tiene.",SC.spongeCut],
+    ["Mezcla la pintura","Mezcla pintura acrílica con un poco de pegamento blanco. Así no se cuartea al apretar.","",SC.mix],
+    ["Pinta el glaseado","Pinta la parte de arriba del donut y deja secar 1 hora.","",SC.paintDonut],
+    ["Pon chispitas","Pinta chispas de colores con la punta del pincel.","",SC.sprinkles],
+    ["Deja secar","Déjalo secar toda la noche antes de apretarlo mucho.","",SC.dry]]},
+  {id:"globo",name:"Pelota de globo",desc:"Un globo relleno de harina con carita.",time:"15 min",level:"Fácil",
+   mats:["2 globos","Harina o fécula de maíz","Embudo o botella cortada","Plumón permanente","Tijeras"],
+   steps:[
+    ["Estira el globo","Infla el globo un poco y desínflalo. Así se estira y es más fácil llenarlo.","",SC.inflate],
+    ["Llénalo","Pon el embudo en la boca del globo y echa harina hasta que tenga el tamaño de una naranja.","Hazlo sobre una charola: ¡la harina vuela!",SC.pour],
+    ["Saca el aire","Aprieta suave para sacar el aire y haz un nudo.","",SC.squeeze],
+    ["Doble capa","Corta la boquilla del segundo globo y ponlo encima para que no se rompa.","",SC.layer],
+    ["Ponle carita","Dibuja ojos y boca con plumón permanente.","",SC.faceBalloon]]}]},
+ {id:"carton",name:"Cartón",desc:"Cajas y rollos que se vuelven casas, robots y más.",color:"var(--orange)",projects:[
+  {id:"portalapices",name:"Portalápices de rollos",desc:"Con rollos de papel de baño y una base.",time:"25 min",level:"Fácil",
+   mats:["3 a 5 rollos de cartón","Un cuadro de cartón para la base","Pegamento blanco","Pintura","Tijeras"],
+   steps:[
+    ["Corta alturas","Corta los rollos a distintas alturas: unos altos, otros bajitos.","",SC.cutTubes],
+    ["Pinta","Pinta cada rollo de un color diferente y deja secar.","",SC.paintTubes],
+    ["Pega en la base","Pega los rollos de pie sobre la base, juntitos.","Ponles un libro encima mientras seca.",SC.assembleTubes],
+    ["Decora","Dibuja caritas, rayas o pon calcomanías.","",SC.decorTubes]]},
+  {id:"robot",name:"Robot de cajas",desc:"Una caja grande, una chica y muchos botones.",time:"1 hora",level:"Medio",
+   mats:["Caja grande (cuerpo)","Caja chica (cabeza)","Rollos de cartón (brazos)","Tapas de botella","Pegamento o silicón","Pintura gris o papel aluminio"],
+   steps:[
+    ["Elige las cajas","Una caja grande para el cuerpo y una chica para la cabeza.","",SC.boxes],
+    ["Hazlo plateado","Pinta las cajas de gris o fórralas con papel aluminio.","",SC.foil],
+    ["Pega la cabeza","Pega la caja chica arriba de la grande.","El silicón caliente lo usa un adulto.",SC.head],
+    ["Brazos y piernas","Pega rollos de cartón a los lados y abajo.","",SC.arms],
+    ["Botones y cara","Pega tapas de botella como botones y dibuja la cara.","",SC.buttons]]},
+  {id:"casita",name:"Casita de cartón",desc:"Una casa con puerta que abre, para tus muñecos.",time:"1 hora 30 min",level:"Difícil",
+   mats:["Caja de cartón mediana","Cartón extra para el techo","Cúter (lo usa un adulto)","Cinta canela","Pintura y crayones","Regla y lápiz"],
+   steps:[
+    ["Marca puerta y ventanas","Con regla y lápiz marca una puerta y dos ventanas en la caja.","",SC.houseMark],
+    ["Recorta","Un adulto corta las ventanas completas y la puerta solo de tres lados, para que abra.","",SC.houseCut],
+    ["Pon el techo","Dobla un cartón a la mitad como libro abierto y pégalo arriba con cinta canela.","",SC.roof],
+    ["Pinta","Pinta paredes y puerta. Deja secar.","",SC.paintHouse],
+    ["Detalles","Dibuja ladrillos, flores y un número en la puerta.","Pon una tela adentro como alfombra.",SC.houseDetails]]}]}
+];
+const byId={};CATS.forEach(c=>c.projects.forEach(p=>byId[p.id]={...p,cat:c}));
+const thumb=p=>p.animal?`<svg viewBox="0 0 100 100">${animalArt(ANIMALS[p.animal])}</svg>`:(TH[p.id]||"");
+
+/* ---------- estado ---------- */
+const KEY="taller-crayon-v2";
+let store={};try{store=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}};
+const st=id=>store[id]||(store[id]={step:0,mats:[],done:false});
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const app=document.getElementById("app"),back=document.getElementById("back");
+
+function home(){
+  back.hidden=true;
+  app.innerHTML=`<p class="intro">¿Qué quieres hacer hoy? <mark>Elige un tipo</mark> y sigue el paso a paso.</p>
+  <div class="cats">${CATS.map((c,i)=>`<button class="cat cray ${i%2?'alt':''}" data-go="${c.id}">
+    ${ICONS[c.id]}<div><h2 style="color:${c.color}">${c.name}</h2><p>${c.desc}</p>
+    <div class="peek" aria-hidden="true">${c.projects.slice(0,5).map(thumb).join("")}</div></div></button>`).join("")}</div>`;
+}
+function cat(c){
+  back.hidden=false;back.dataset.target="";
+  app.innerHTML=`<div class="cathead">${ICONS[c.id]}<h2 style="color:${c.color}">${c.name}</h2></div>
+  <p class="sub">${c.desc} Elige ${c.id==="squishies"?"tu animalito":"un proyecto"}.</p>
+  <div class="projects">${c.projects.map((p,i)=>{const s=store[p.id];return `<button class="proj cray ${i%2?'alt':''}" data-go="p-${p.id}">
+    <div class="thumb">${thumb(p)}</div><h3>${p.name}</h3><p>${p.desc}</p>
+    <div class="meta"><span class="chip">${p.time}</span><span class="chip">${p.level}</span><span class="chip">${p.steps.length} pasos</span></div>
+    ${s&&s.done?'<span class="badge" style="color:var(--green)">✓ ¡Ya lo hiciste!</span>':s&&s.step>0?`<span class="badge" style="color:var(--orange)">Vas en el paso ${s.step+1}</span>`:''}
+  </button>`}).join("")}</div>`;
+}
+function proj(p){
+  const s=st(p.id),c=p.cat,n=p.steps.length;back.hidden=false;back.dataset.target=c.id;
+  document.documentElement.style.setProperty("--accent",c.id==="squishies"?"var(--red)":c.color);
+  let stepHTML;
+  if(s.done){stepHTML=`<div class="step cray finish"><div class="ill-wrap">${p.steps[n-1][3](ANIMALS[p.animal])}</div><h3>¡Terminaste!</h3><p>Tómale una foto y enséñasela a alguien.</p>
+     <div class="nav" style="justify-content:center"><button class="btn cray" data-act="restart">Hacerlo otra vez</button><button class="btn cray go alt" data-go="${c.id}">Ver más</button></div></div>`}
+  else{const [t,d,tip,ill]=p.steps[s.step];
+    stepHTML=`<div class="step cray"><div class="ill-wrap">${ill(ANIMALS[p.animal])}</div>
+      <div class="stepnum"><b>${s.step+1}</b>de ${n}</div><h3>${t}</h3><p>${d}</p>
+      ${tip?`<div class="tip cray alt"><b>Tip:</b> ${tip}</div>`:""}</div>
+      <div class="nav"><button class="btn cray" data-act="prev" ${s.step===0?"disabled":""}>← Atrás</button>
+      <div class="dots" aria-hidden="true">${p.steps.map((_,i)=>`<span class="dot ${i<=s.step?'on':''} ${i===s.step?'cur':''}"></span>`).join("")}</div>
+      <button class="btn cray go alt" data-act="next">${s.step===n-1?"¡Terminé!":"Siguiente →"}</button></div>`}
+  const pct=s.done?100:Math.round(s.step/n*100);
+  app.innerHTML=`<div class="dhead"><div class="thumb">${thumb(p)}</div><div><h2 style="color:${c.color}">${p.name}</h2><p>${p.time} · ${p.level}</p></div></div>
+   ${p.trace?`<button class="btn cray go alt cam-cta" data-act="trace">Calcar con cámara</button>`:""}
+   <div class="progress cray" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="bar" style="width:max(0px,calc(${pct}% - 12px))"></div></div>
+   ${stepHTML}`;
+  app.onchange=e=>{const i=+e.target.dataset.mat;if(isNaN(i))return;s.mats=e.target.checked?[...new Set([...s.mats,i])]:s.mats.filter(x=>x!==i);save()};
+  if(reduce)app.querySelectorAll("svg.ill").forEach(sv=>{try{sv.pauseAnimations();sv.setCurrentTime(+sv.dataset.rest)}catch(e){}});
+}
+
+/* ---------- calcar con cámara ---------- */
+const cam=document.getElementById("cam"),video=document.getElementById("cam-video"),tpl=document.getElementById("cam-tpl");
+let camStream=null,camP=null,camSteps=[],camI=0,pos={x:0,y:0},torchOn=false;
+const lineDet=d=>d.replace(/fill="(#(?!2b2a33)[0-9a-fA-F]{3,6})"/g,'fill="none" stroke="#111" stroke-width="1"').replace(/fill="#2b2a33"/g,'fill="#111"').replace(/stroke="#2b2a33"/g,'stroke="#111"').replace(/stroke="#fff"/g,'stroke="#111"').replace(/stroke-width="5"/g,'stroke-width="1"');
+function camTemplate(p){
+  if(p.id==="cubo")return {svg:`<svg viewBox="76 3 88 114">
+     <g class="g g-body"><path d="${NET}" fill="#f5c43a"/></g>
+     <g class="g g-detc" transform="translate(107 86) scale(.26)">${EMO.heart.d}</g>
+     <g class="g g-fold"><path d="${NETF}" fill="none" stroke="#111" stroke-width=".7" stroke-dasharray="2 2"/></g>
+     <g class="g g-det" transform="translate(107 86) scale(.26)" fill="none" stroke="#111" stroke-width="3"><path d="M30 28 c-6 -10 -20 -2 -12 10 l12 12 12 -12 c8 -12 -6 -20 -12 -10z M70 28 c-6 -10 -20 -2 -12 10 l12 12 12 -12 c8 -12 -6 -20 -12 -10z M30 64 q20 18 40 0"/></g>
+     <g class="g g-out"><path d="${NET}" fill="none" stroke="#111" stroke-width="1.2"/></g></svg>`,
+    steps:[["Calca","Silueta","Sigue la orilla de la cruz.","#111",["out"]],["Calca","Dobleces","Marca suavecito las rayitas de en medio.","#888",["fold"]],["Calca","Carita","Dibuja los corazones y la sonrisa en el cuadro de abajo.","#111",["det"]],["Colorea","Amarillo","Colorea toda la cruz, salte un poquito de la línea.","#f5c43a",["body"]],["Colorea","Carita","Corazones rojos y boca café.","#e2483d",["detc"]],["Repasa","Negro","Repasa la orilla y la carita con plumón negro.","#111",["out","det"]]]};
+  const a=ANIMALS[p.animal];
+  const half=(back)=>`<g ${back?'transform="translate(0 176) scale(1 -1)"':""}>
+     <g class="g g-body"><path d="${a.path}" fill="${a.color}"/></g>
+     ${back?"":`<g class="g g-detc">${a.det}</g><g class="g g-det">${lineDet(a.det)}</g>`}
+     <g class="g g-out"><path d="${a.path}" fill="none" stroke="#111" stroke-width="1.5"/></g></g>`;
+  const cap=a.colorName[0].toUpperCase()+a.colorName.slice(1);
+  return {svg:`<svg viewBox="-5 8 110 162">${half(false)}${half(true)}
+     <g class="g g-out"><text x="102" y="20" font-size="6" text-anchor="end" fill="#111" font-family="Gochi Hand,cursive">frente</text><text x="102" y="164" font-size="6" text-anchor="end" fill="#111" font-family="Gochi Hand,cursive">espalda</text></g></svg>`,
+   steps:[["Calca","Silueta","Sigue la línea negra del frente y de la espalda.","#111",["out"]],["Calca","Detalles","Ahora ojos, boca y todo lo de adentro.","#111",["det"]],["Colorea",cap,"Colorea todo el cuerpo, salte un poquito de la línea.",a.color,["body"]],["Colorea","Detalles","Cachetes, panza, manchitas y lo demás.","#f7a8c4",["detc"]],["Repasa","Negro","Repasa la orilla y los ojos con plumón negro.","#111",["out","det"]]]};
+}
+function camRender(){
+  const [k,n,t,c,cur]=camSteps[camI];const vis=new Set();camSteps.slice(0,camI+1).forEach(s=>s[4].forEach(g=>vis.add(g)));
+  tpl.querySelectorAll(".g").forEach(g=>{const name=[...g.classList].find(x=>x.startsWith("g-")).slice(2);g.classList.toggle("vis",vis.has(name));g.classList.toggle("cur",cur.includes(name))});
+  document.getElementById("l-dot").style.background=c;document.getElementById("l-kind").textContent=k;document.getElementById("l-name").textContent=n;document.getElementById("l-text").textContent=t;
+  document.getElementById("l-count").textContent=`${camI+1}/${camSteps.length}`;document.getElementById("l-prev").disabled=camI===0;
+  document.getElementById("l-next").textContent=camI===camSteps.length-1?"¡Terminé!":"Siguiente";
+}
+function camApply(){tpl.style.opacity=document.getElementById("cam-op").value/100;tpl.style.transform=`translate(${pos.x}px,${pos.y}px) scale(${document.getElementById("cam-size").value/100})`}
+function openCam(p){
+  camP=p;const T=camTemplate(p);tpl.innerHTML=T.svg;camSteps=T.steps;camI=0;pos={x:0,y:0};
+  document.getElementById("cam-title").textContent=p.name;
+  cam.hidden=false;cam.classList.remove("locked");document.getElementById("cam-unlock").hidden=true;
+  document.getElementById("cam-setup").hidden=false;document.getElementById("cam-panel").hidden=true;document.getElementById("cam-paper").hidden=false;tpl.hidden=true;
+  document.body.style.overflow="hidden";
+}
+async function startCam(){
+  document.getElementById("cam-setup").hidden=true;document.getElementById("cam-panel").hidden=false;tpl.hidden=false;camRender();camApply();
+  const note=document.getElementById("cam-note");note.hidden=true;
+  try{
+    if(!navigator.mediaDevices?.getUserMedia)throw new Error("sin cámara");
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},audio:false});
+    video.srcObject=camStream;await video.play();document.getElementById("cam-paper").hidden=true;
+    const tr=camStream.getVideoTracks()[0],caps=tr.getCapabilities?.()||{};document.getElementById("cam-torch").hidden=!caps.torch;
+  }catch(e){note.hidden=false;document.getElementById("cam-paper").hidden=false}
+  try{navigator.wakeLock?.request("screen").catch(()=>{})}catch(_){}
+}
+function closeCam(){cam.hidden=true;document.body.style.overflow="";if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}video.srcObject=null;torchOn=false;document.getElementById("cam-torch").classList.remove("on")}
+document.getElementById("cam-close").addEventListener("click",closeCam);
+document.getElementById("cam-start").addEventListener("click",startCam);
+document.getElementById("l-prev").addEventListener("click",()=>{if(camI>0){camI--;camRender()}});
+document.getElementById("l-next").addEventListener("click",()=>{if(camI<camSteps.length-1){camI++;camRender()}else closeCam()});
+document.getElementById("cam-op").addEventListener("input",camApply);
+document.getElementById("cam-size").addEventListener("input",camApply);
+document.getElementById("cam-lock").addEventListener("click",()=>{cam.classList.add("locked");document.getElementById("cam-unlock").hidden=false});
+document.getElementById("cam-unlock").addEventListener("click",()=>{cam.classList.remove("locked");document.getElementById("cam-unlock").hidden=true});
+document.getElementById("cam-torch").addEventListener("click",async e=>{try{torchOn=!torchOn;await camStream.getVideoTracks()[0].applyConstraints({advanced:[{torch:torchOn}]});e.target.classList.toggle("on",torchOn)}catch(_){torchOn=false}});
+(()=>{const st=document.getElementById("cam-stage");let d=null;
+  st.addEventListener("pointerdown",e=>{if(cam.classList.contains("locked")||tpl.hidden)return;d={x:e.clientX-pos.x,y:e.clientY-pos.y};try{st.setPointerCapture(e.pointerId)}catch(_){}});
+  st.addEventListener("pointermove",e=>{if(!d)return;pos={x:e.clientX-d.x,y:e.clientY-d.y};camApply()});
+  const end=()=>{d=null};st.addEventListener("pointerup",end);st.addEventListener("pointercancel",end);})();
+
+function route(){
+  const h=location.hash.slice(1);app.onchange=null;if(!cam.hidden)closeCam();
+  if(h.startsWith("p-")&&byId[h.slice(2)])proj(byId[h.slice(2)]);
+  else{const c=CATS.find(c=>c.id===h);c?cat(c):home()}
+  window.scrollTo(0,0);
+}
+const go=t=>{if(("#"+t)===location.hash||(!t&&!location.hash))route();else location.hash=t};
+document.addEventListener("click",e=>{
+  const g=e.target.closest("[data-go]");if(g){go(g.dataset.go);return}
+  const a=e.target.closest("[data-act]");if(!a)return;
+  const p=byId[location.hash.slice(3)];if(!p)return;const s=st(p.id);
+  if(a.dataset.act==="trace"){openCam(p);return}
+  if(a.dataset.act==="next"){if(s.step<p.steps.length-1)s.step++;else s.done=true}
+  if(a.dataset.act==="prev"&&s.step>0)s.step--;
+  if(a.dataset.act==="restart"){s.step=0;s.done=false;s.mats=[]}
+  save();proj(p);
+  document.querySelector(".step")?.scrollIntoView({block:"nearest",behavior:reduce?"auto":"smooth"});
+});
+back.addEventListener("click",()=>go(back.dataset.target||""));
+window.addEventListener("hashchange",route);
+route();
+</script>
+</body></html>
